@@ -1,8 +1,14 @@
-robomagellan_2012:
-  Code for a robot competing in the Chibots Robomagellan 2012 competition
-  http://www.chibots.org/?q=node/1696
+Nomad
+Bill Mania <bill@manialabs.us>
 
-/robomagellan
-  ROS code
-/sketches
-  Arduiono sketches
+The nomad project consists of a mobile, autonomous rover which
+can explore an indoor space.
+
+parts contains the files which describe the mechanical parts,
+usually in either OpenSCAD or FreeCAD format.
+
+ros contains the source files for the ROS implementation of
+all of the software logic.
+
+sketches contains the Arduino sketches for the projectg.
+
