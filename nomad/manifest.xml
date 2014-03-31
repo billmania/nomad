@@ -1,30 +1,14 @@
 <package>
-  <description brief="robomagellan">
+  <description brief="nomad">
 
-     robomagellan
+     nomad
 
   </description>
-  <author>Jessica Austin, Bill Mania</author>
+  <author>Bill Mania</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>https://github.com/jessicaaustin/robomagellan_2012</url>
+  <url>https://github.com/billmania/nomad</url>
   <depend package="rospy"/>
-  <depend package="tf"/>
-  <depend package="move_base"/>
-  <depend package="map_server"/>
-  <depend package="stage"/>
-  <depend package="fake_localization"/>
-  <depend package="actionlib"/>
-  <depend package="actionlib_msgs"/>
-  <depend package="geometry_msgs"/>
-  <depend package="nav_msgs"/>
-  <depend package="visualization_msgs"/>
-  <depend package="move_base_msgs"/>
-  <depend package="sensor_msgs"/>
-  <depend package="robot_state_publisher"/>
-  <depend package="topic_tools"/>
-  <depend package="cv_bridge"/>
-  <depend package="differential_drive"/>
 
 </package>
 

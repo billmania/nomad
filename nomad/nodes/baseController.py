@@ -15,7 +15,7 @@ publishes to:
 
 """
 
-import roslib; roslib.load_manifest('robomagellan')
+import roslib; roslib.load_manifest('nomad')
 import rospy
 
 from geometry_msgs.msg import Twist

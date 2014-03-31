@@ -15,7 +15,7 @@ publishes to:
  /cmd_vel
 """
 
-import roslib; roslib.load_manifest('robomagellan')
+import roslib; roslib.load_manifest('nomad')
 import rospy
 
 import time

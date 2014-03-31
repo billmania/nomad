@@ -9,7 +9,8 @@ import rospy
 import time
 from ctypes import *
 from Phidgets.Devices.MotorControl import MotorControl
-from Phidgets.PhidgetException import PhidgetException
+from Phidgets.PhidgetException import *
+from Phidgets.Events.Events import *
 from settings import rotationWheelSpeed, translationWheelSpeed
 
 #

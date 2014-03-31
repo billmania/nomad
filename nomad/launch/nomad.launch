@@ -1,0 +1,6 @@
+<launch>
+
+    <!-- NAVIGATION -->
+    <include file="$(find nomad)/config/base_controller.xml"/> 
+
+</launch>

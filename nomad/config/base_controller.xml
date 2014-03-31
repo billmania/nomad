@@ -1,10 +1,10 @@
 <launch>
 
     <node
-        pkg="robomagellan"
+        pkg="nomad"
         type="baseController.py"
         name="baseController"
-        respawn="true"
+        respawn="false"
     />
     
 </launch>
