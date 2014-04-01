@@ -21,6 +21,15 @@
     <xacro:property name="wheelTrack"     value="0.307" />
     <xacro:property name="axleHeight"     value="${wheelRadius}" />
 
+    <!--
+	 The definitions for the lidar.
+	 -->
+    <xacro:property name="lidarLength"    value="0.085" />
+    <xacro:property name="lidarRadius"    value="0.065" />
+    <xacro:property name="lidarOriginX"   value="0.0" />
+    <xacro:property name="lidarOriginY"   value="0.0" />
+    <xacro:property name="lidarOriginZ"   value="0.333" />
+
     <link name="base_link">
         <visual>
             <origin xyz="${mainPadOriginX} ${mainPadOriginY} ${mainPadOriginZ}" rpy="0 0 0" />
@@ -59,6 +68,21 @@
             <origin xyz="0 0 0" rpy="1.57 0 0" />
             <geometry>
                 <cylinder length="${wheelWidth}" radius="${wheelRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_lidar" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidar"/>
+        <origin xyz="${lidarOriginX} ${lidarOriginY} ${lidarOriginZ}"/>
+    </joint>
+
+    <link name="lidar">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="${lidarLength}" radius="${lidarRadius}" />
             </geometry>
         </visual>
     </link>
