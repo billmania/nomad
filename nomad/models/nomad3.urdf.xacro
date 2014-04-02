@@ -9,9 +9,18 @@
     <xacro:property name="mainPadLength"  value="0.356" />
     <xacro:property name="mainPadWidth"   value="0.203" />
     <xacro:property name="mainPadHeight"  value="0.013" />
-    <xacro:property name="mainPadOriginX" value="-0.139" />
-    <xacro:property name="mainPadOriginY" value="0.0" />
-    <xacro:property name="mainPadOriginZ" value="0.190" />
+    <xacro:property name="mainPadX" value="-0.139" />
+    <xacro:property name="mainPadY" value="0.0" />
+    <xacro:property name="mainPadZ" value="0.198" />
+
+    <!--
+	 The definitions for the cameras.
+	 -->
+    <xacro:property name="cameraRadius"   value="0.015" />
+    <xacro:property name="cameraLength"   value="0.030" />
+    <xacro:property name="cameraFX"       value="0.0" />
+    <xacro:property name="cameraFY"       value="0.0" />
+    <xacro:property name="cameraFZ"       value="0.026" />
 
     <!--
 	 The definitions for the wheels.
@@ -44,7 +53,7 @@
 
     <link name="base_link">
         <visual>
-            <origin xyz="${mainPadOriginX} ${mainPadOriginY} ${mainPadOriginZ}" rpy="0 0 0" />
+            <origin xyz="${mainPadX} ${mainPadY} ${mainPadZ}" rpy="0 0 0" />
             <geometry>
                 <box size="${mainPadLength} ${mainPadWidth} ${mainPadHeight}" />
             </geometry>
@@ -168,6 +177,24 @@
             <origin xyz="0 0 0" />
             <geometry>
                 <cylinder length="${ultraLength}" radius="${ultraRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_camera_front" type="fixed">
+        <parent link="base_link"/>
+        <child link="camera_front"/>
+        <origin
+            xyz="${cameraFX} ${cameraFY} ${mainPadZ + cameraFZ}"
+            rpy="-1.57 0 -1.57"
+            />
+    </joint>
+
+    <link name="camera_front">
+        <visual>
+            <origin xyz="0 0 0" />
+            <geometry>
+                <cylinder length="${cameraLength}" radius="${cameraRadius}" />
             </geometry>
         </visual>
     </link>
