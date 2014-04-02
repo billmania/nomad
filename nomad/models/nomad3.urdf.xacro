@@ -30,6 +30,18 @@
     <xacro:property name="lidarOriginY"   value="0.0" />
     <xacro:property name="lidarOriginZ"   value="0.333" />
 
+    <!--
+	 The definitions for the ultrasonic rangefinders.
+	 -->
+    <xacro:property name="ultraLength"    value="0.020" />
+    <xacro:property name="ultraRadius"    value="0.008" />
+    <xacro:property name="ultraOriginXF"  value="0.055" />
+    <xacro:property name="ultraOriginXB"  value="-0.330" />
+    <xacro:property name="ultraOriginY"   value="0.070" />
+    <xacro:property name="ultraOriginZ"   value="0.187" />
+    <xacro:property name="ultraUp"        value="-0.1" />
+    <xacro:property name="ultraOut"       value="0.05" />
+
     <link name="base_link">
         <visual>
             <origin xyz="${mainPadOriginX} ${mainPadOriginY} ${mainPadOriginZ}" rpy="0 0 0" />
@@ -83,6 +95,79 @@
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
                 <cylinder length="${lidarLength}" radius="${lidarRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_range_lf" type="fixed">
+        <parent link="base_link"/>
+        <child link="range_left_front"/>
+        <origin
+            xyz="${ultraOriginXF} ${ultraOriginY} ${ultraOriginZ}"
+            rpy="0 ${ultraUp} ${ultraOut}"
+            />
+    </joint>
+
+    <link name="range_left_front">
+        <visual>
+            <origin xyz="0 0 0"
+                />
+            <geometry>
+                <cylinder length="${ultraLength}" radius="${ultraRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_range_rf" type="fixed">
+        <parent link="base_link"/>
+        <child link="range_right_front"/>
+        <origin
+            xyz="${ultraOriginXF} -${ultraOriginY} ${ultraOriginZ}"
+            rpy="0 ${ultraUp} -${ultraOut}"
+            />
+    </joint>
+
+    <link name="range_right_front">
+        <visual>
+            <origin xyz="0 0 0" />
+            <geometry>
+                <cylinder length="${ultraLength}" radius="${ultraRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_range_lr" type="fixed">
+        <parent link="base_link"/>
+        <child link="range_left_rear"/>
+        <origin
+            xyz="${ultraOriginXB} ${ultraOriginY} ${ultraOriginZ}"
+            rpy="0 ${ultraUp} ${3.14-ultraOut}"
+            />
+    </joint>
+
+    <link name="range_left_rear">
+        <visual>
+            <origin xyz="0 0 0" />
+            <geometry>
+                <cylinder length="${ultraLength}" radius="${ultraRadius}" />
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="base_link_to_range_rr" type="fixed">
+        <parent link="base_link"/>
+        <child link="range_right_rear"/>
+        <origin
+            xyz="${ultraOriginXB} -${ultraOriginY} ${ultraOriginZ}"
+            rpy="0 ${ultraUp} ${3.14+ultraOut}"
+            />
+    </joint>
+
+    <link name="range_right_rear">
+        <visual>
+            <origin xyz="0 0 0" />
+            <geometry>
+                <cylinder length="${ultraLength}" radius="${ultraRadius}" />
             </geometry>
         </visual>
     </link>
