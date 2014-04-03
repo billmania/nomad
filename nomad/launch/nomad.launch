@@ -1,6 +1,8 @@
 <launch>
 
-    <!-- NAVIGATION -->
-    <include file="$(find nomad)/config/base_controller.xml"/> 
+    <!-- Motor control -->
+    <include 
+        file="$(find nomad)/config/diff_baseController.xml"
+        /> 
 
 </launch>

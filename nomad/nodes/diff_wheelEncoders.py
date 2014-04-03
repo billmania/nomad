@@ -12,7 +12,7 @@ PhidgetsEncoders() - Read the encoder values from a
 
 """
 
-import roslib; roslib.load_manifest('robomagellan')
+import roslib; roslib.load_manifest('nomad')
 import rospy
 from std_msgs.msg import Int16
 
@@ -21,28 +21,25 @@ from Phidgets.PhidgetException import PhidgetException
 
 class PhidgetEncoders:
 
-    def __init__(self):
+    def __init__(
+        self,
+        leftEncoder,
+        rightEncoder,
+        leftSignAdjust,
+        rightSignAdjust,
+        rollover
+        ):
 
-        rospy.loginfo("Initializing PhidgetEncoders")
-
-        self.leftFrontEncoder = 1
-        self.rightFrontEncoder = 0
-        self.leftRearEncoder = 3
-        self.rightRearEncoder = 2
-        self.leftSignAdjust = 1 # forward is positive
-        self.rightSignAdjust = -1 # forward is negative
-        self.rollover = 32768
+        self.leftEncoderId = leftEncoder
+        self.rightEncoderId = rightEncoder
+        self.leftSignAdjust = leftSignAdjust
+        self.rightSignAdjust = rightSignAdjust
+        self.rollover = rollover
 
         self.leftEncoder = Int16(0)
         self.rightEncoder = Int16(0)
 
-        # publish the Odometry message to describe the current position
-        # and orientation of the origin of the base_link frame.
-        #
         self.encoder = Encoder()
-
-        self.leftEncoderPublisher = rospy.Publisher('lwheel', Int16)
-        self.rightEncoderPublisher = rospy.Publisher('rwheel', Int16)
 
         self.encoder.setOnAttachHandler(self.encoderAttached)
         self.encoder.setOnDetachHandler(self.encoderDetached)
@@ -72,6 +69,9 @@ class PhidgetEncoders:
     
             raise
 
+        self.leftEncoderPublisher = rospy.Publisher('lwheel', Int16)
+        self.rightEncoderPublisher = rospy.Publisher('rwheel', Int16)
+
         return
 
     def encoderPositionChange(self, e):
@@ -81,23 +81,15 @@ class PhidgetEncoders:
 
     def updatePulseValues(self):
 
-        leftFrontPulses = (self.leftSignAdjust * self.encoder.getPosition(self.leftFrontEncoder))
-        rightFrontPulses = (self.rightSignAdjust * self.encoder.getPosition(self.rightFrontEncoder))
-        leftRearPulses = (self.leftSignAdjust * self.encoder.getPosition(self.leftRearEncoder))
-        rightRearPulses = (self.rightSignAdjust * self.encoder.getPosition(self.rightRearEncoder))
+        leftPulses = (self.leftSignAdjust * self.encoder.getPosition(self.leftEncoderId))
+        rightPulses = (self.rightSignAdjust * self.encoder.getPosition(self.rightEncoderId))
 
-        leftPulses = (leftFrontPulses + leftRearPulses) / 2
-        rightPulses = (rightFrontPulses + rightRearPulses) / 2
 
-        rospy.logdebug('leftEncoder: %d, front: %d, rear: %d' % (
-            leftPulses,
-            leftFrontPulses,
-            leftRearPulses
+        rospy.logdebug('leftEncoder: %d' % (
+            leftPulses
             ))
-        rospy.logdebug('rightEncoder: %d, front: %d, rear: %d' % (
-            rightPulses,
-            rightFrontPulses,
-            rightRearPulses
+        rospy.logdebug('rightEncoder: %d' % (
+            rightPulses
             ))
 
         #
@@ -108,46 +100,30 @@ class PhidgetEncoders:
         #
         if leftPulses > self.rollover:
             rospy.logdebug('left rolled over forward')
-            leftPulses = -(self.rollover) + leftPulses - self.rollover
+            leftPulses = leftPulses - self.rollover
             self.encoder.setPosition(
-                self.leftFrontEncoder,
-                leftPulses
-                )
-            self.encoder.setPosition(
-                self.leftRearEncoder,
+                self.leftEncoderId,
                 leftPulses
                 )
         elif leftPulses < -(self.rollover):
             rospy.logdebug('left rolled over backward')
-            leftPulses = self.rollover + leftPulses + self.rollover
+            leftPulses = leftPulses + self.rollover
             self.encoder.setPosition(
-                self.leftFrontEncoder,
-                leftPulses
-                )
-            self.encoder.setPosition(
-                self.leftRearEncoder,
+                self.leftEncoderId,
                 leftPulses
                 )
         if rightPulses > self.rollover:
             rospy.logdebug('right rolled over forward')
-            rightPulses = -(self.rollover) + rightPulses - self.rollover
+            rightPulses = rightPulses - self.rollover
             self.encoder.setPosition(
-                self.rightFrontEncoder,
-                rightPulses
-                )
-            self.encoder.setPosition(
-                self.rightRearEncoder,
+                self.rightEncoderId,
                 rightPulses
                 )
         elif rightPulses < -(self.rollover):
             rospy.logdebug('right rolled over backward')
-            rightPulses = self.rollover + rightPulses + self.rollover
+            rightPulses = rightPulses + self.rollover
             self.encoder.setPosition(
-                self.rightFrontEncoder,
-                rightPulses
-                )
-            self.encoder.setPosition(
-                self.rightRearEncoder,
+                self.rightEncoderId,
                 rightPulses
                 )
 
@@ -160,35 +136,19 @@ class PhidgetEncoders:
         rospy.loginfo('encoderAttached() called')
 
         self.encoder.setPosition(
-                self.leftFrontEncoder,
+                self.leftEncoderId,
                 0
                 )
         self.encoder.setPosition(
-                self.leftRearEncoder,
-                0
-                )
-        self.encoder.setPosition(
-                self.rightFrontEncoder,
-                0
-                )
-        self.encoder.setPosition(
-                self.rightRearEncoder,
+                self.rightEncoderId,
                 0
                 )
         self.encoder.setEnabled(
-                self.leftFrontEncoder,
+                self.leftEncoderId,
                 True
                 )
         self.encoder.setEnabled(
-                self.leftRearEncoder,
-                True
-                )
-        self.encoder.setEnabled(
-                self.rightFrontEncoder,
-                True
-                )
-        self.encoder.setEnabled(
-                self.rightRearEncoder,
+                self.rightEncoderId,
                 True
                 )
 
@@ -208,20 +168,33 @@ class PhidgetEncoders:
     
 if __name__ == "__main__":
     rospy.init_node(
-        name = 'wheel_encoders',
+        name = 'diff_wheelEncoders',
         log_level = rospy.DEBUG
         )
     rospy.sleep(3.0)
-    rospy.loginfo("Initializing wheel_encoders.py")
+    rospy.loginfo("Initializing diff_wheelEncoders.py")
 
-    encoder = PhidgetEncoders()
+    rightMotorDirectionSign = rospy.get_param("rightMotorDirectionSign", 1)
+    leftMotorDirectionSign  = rospy.get_param("leftMotorDirectionSign", -1)
+    leftMotorId             = rospy.get_param("leftMotorId", 0)
+    rightMotorId            = rospy.get_param("rightMotorId", 1)
+    encoderUpdateHz         = rospy.get_param("encoderUpdateHz", 10.0)
+    encoderMax              = rospy.get_param("encoder_max", 65535)
 
-    consistentFrequency = rospy.Rate(5)
+    encoder = PhidgetEncoders(
+        leftMotorId,
+        rightMotorId,
+        leftMotorDirectionSign,
+        rightMotorDirectionSign,
+        encoderMax
+        )
+
+    encoderUpdate = rospy.Rate(encoderUpdateHz)
     while not rospy.is_shutdown():
         encoder.updatePulseValues()
 
         encoder.leftEncoderPublisher.publish(encoder.leftEncoder)
         encoder.rightEncoderPublisher.publish(encoder.rightEncoder)
 
-        consistentFrequency.sleep()
+        encoderUpdate.sleep()
 

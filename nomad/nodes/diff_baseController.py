@@ -21,7 +21,7 @@ the wheel.
 
 """
 
-import roslib; roslib.load_manifest('robomagellan')
+import roslib; roslib.load_manifest('nomad')
 import rospy
 from std_msgs.msg import Float32
 
@@ -34,6 +34,7 @@ rightVelocity = 0.0
 
 maxMetersPerSecond = 0.0
 minMetersPerSecond = 0.0
+motorUpdateHz      = 0.0
 
 def handleRightMotorMessage(rightMotorMessage):
     global rightVelocity
@@ -49,8 +50,6 @@ def handleRightMotorMessage(rightMotorMessage):
         rightVelocity = int(rightMotorMessage.data / maxMetersPerSecond * 100)
         if rightVelocity < -100:
             rightVelocity = -100
-
-    rightVelocity = -(rightVelocity)
 
     return
 
@@ -78,17 +77,32 @@ if __name__ == '__main__':
         )
     rospy.loginfo("Initializing diff_baseController node")
 
-    motorController = PhidgetMotorController()
-    motorController.setDefaultSpeed(75.0)
+    maxMetersPerSecond      = rospy.get_param("maxMetersPerSecond", 0.6)
+    minMetersPerSecond      = rospy.get_param("minMetersPerSecond", 0.1)
+    motorUpdateHz           = rospy.get_param("motorUpdateHz",     10.0)
+    rightMotorDirectionSign = rospy.get_param("rightMotorDirectionSign", 1)
+    leftMotorDirectionSign  = rospy.get_param("leftMotorDirectionSign", -1)
+    leftMotorId             = rospy.get_param("leftMotorId", 0)
+    rightMotorId            = rospy.get_param("rightMotorId", 1)
+    rospy.loginfo("Max m/s: %0.3f, Min m/s: %0.3f, Hz: %0.3f" % (
+        maxMetersPerSecond,
+        minMetersPerSecond,
+        motorUpdateHz
+        )
+        )
 
-    maxMetersPerSecond = rospy.get_param("~maxMetersPerSecond", 0.5)
-    minMetersPerSecond = rospy.get_param("~minMetersPerSecond", 0.1)
-    rospy.loginfo("Max m/s: %0.3f, Min m/s: %0.3f" % (maxMetersPerSecond, minMetersPerSecond))
+    motorController = PhidgetMotorController(
+        leftMotorId,
+        rightMotorId,
+        leftMotorDirectionSign,
+        rightMotorDirectionSign
+        )
+    motorController.setDefaultSpeed(75.0)
 
     rospy.Subscriber('lmotor', Float32, handleLeftMotorMessage)
     rospy.Subscriber('rmotor', Float32, handleRightMotorMessage)
 
-    rate = rospy.Rate(10.0)
+    rate = rospy.Rate(motorUpdateHz)
     while not rospy.is_shutdown():
         motorController.motorsDirect(
             leftVelocity,

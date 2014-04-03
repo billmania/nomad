@@ -25,15 +25,22 @@ ACCELERATION=10
 
 class PhidgetMotorController:
 
-    def __init__(self):
-        self.leftWheels = 1
-        self.rightWheels = 0
-        self.whichMotorFirst = self.rightWheels
+    def __init__(
+        self,
+        leftMotorId,
+        rightMotorId,
+        leftSignAdjust,
+        rightSignAdjust
+        ):
+
+        self.leftWheels = leftMotorId
+        self.rightWheels = rightMotorId
         self.defaultMotorSpeed = 100.0
         self.motorMaxSpeed = 100
-        self.motorMinSpeed = 20
-        self.leftAdjustment = 1.0
-        self.rightAdjustment = -1.0
+        self.motorMinSpeed = 0
+        self.leftSignAdjust = leftSignAdjust
+        self.rightSignAdjust = rightSignAdjust
+        self.whichMotorFirst = self.rightWheels
 
         self.motorControl = MotorControl()
 
@@ -104,9 +111,25 @@ class PhidgetMotorController:
         return self.defaultMotorSpeed
 
     def motorsDirect(self, leftVelocity, rightVelocity):
+        """motorsDirect() - Set the motor velocities directly
+
+            leftVelocity, rightVelocity - integer velocity between
+                -100 and 100, not adjusted for motor orientation.
+
+            This function does no calculations for the speed or direction
+            of the rover, it simply causes the wheels to turn.
+
+        """
+
         try:
-            self.motorControl.setVelocity(self.leftWheels, leftVelocity);
-            self.motorControl.setVelocity(self.rightWheels, rightVelocity);
+            self.motorControl.setVelocity(
+                self.leftWheels,
+                self.leftSignAdjust * leftVelocity
+                );
+            self.motorControl.setVelocity(
+                self.rightWheels,
+                self.rightSignAdjust * rightVelocity
+                );
 
         except PhidgetException, e:
             rospy.logwarn('setVelocity() failed, left: %d, right: %d' % (
@@ -178,8 +201,8 @@ class PhidgetMotorController:
         # adjust for difference in motor speeds and in rotation
                 # direction possibly caused by wiring.
                 #
-        leftSpeed *= self.leftAdjustment
-        rightSpeed *= self.rightAdjustment
+        leftSpeed *= self.leftSignAdjust
+        rightSpeed *= self.rightSignAdjust
 
         rospy.logwarn('translationX: %f, rotationZ: %f, left: %f, right: %f' % (
                 translationX,
