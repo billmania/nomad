@@ -13,9 +13,18 @@
 	<rosparam param="encoder_min">-32767</rosparam>
 	<rosparam param="encoder_max">32767</rosparam>
 	<rosparam param="encoderUpdateHz">1.0</rosparam>
-	<rosparam param="wheel_low_wrap">-32000</rosparam>
-	<rosparam param="wheel_high_wrap">32000</rosparam>
+	<rosparam param="wheel_low_wrap">9830</rosparam>
+	<rosparam param="wheel_high_wrap">13107</rosparam>
 	<rosparam param="base_width">0.307</rosparam>
+
+    <rosparam param="out_min">-0.8</rosparam>
+    <rosparam param="out_max">0.8</rosparam>
+    <!--
+         "rate" is the differential_drive update frequency
+      -->
+    <rosparam param="rate">10</rosparam>
+    <rosparam param="rolling_pts">2</rosparam>
+    <rosparam param="timeout_ticks">3</rosparam>
 
     <node
         pkg="nomad"
@@ -44,5 +53,59 @@
         name="robot_state_publisher"
         respawn="true"
         />
+
+    <node
+        pkg="differential_drive"
+        type="diff_tf.py"
+        name="diff_tf"
+        respawn="true"
+        >
+
+        <remap from="odom" to="wheel_odom"/>
+    </node>
+
+    <node
+        pkg="differential_drive"
+        type="twist_to_motors.py"
+        name="twist_to_motors"
+        respawn="true"
+        >
+
+        <remap from="twist" to="cmd_vel"/>
+    </node>
+
+    <node
+        pkg="differential_drive"
+        type="pid_velocity.py"
+        name="left_pid_velocity"
+        respawn="true"
+        >
+
+      <remap from="wheel" to="lwheel"/>
+      <remap from="motor_cmd" to="lmotor"/>
+      <remap from="wheel_vtarget" to="lwheel_vtarget"/>
+      <remap from="wheel_vel" to="lwheel_vel"/>
+
+      <rosparam param="Kp">1.5</rosparam>
+      <rosparam param="Ki">0</rosparam>
+      <rosparam param="Kd">0</rosparam>
+    </node>
+
+    <node
+        pkg="differential_drive"
+        type="pid_velocity.py"
+        name="right_pid_velocity"
+        respawn="true"
+        >
+
+      <remap from="wheel" to="rwheel"/>
+      <remap from="motor_cmd" to="rmotor"/>
+      <remap from="wheel_vtarget" to="rwheel_vtarget"/>
+      <remap from="wheel_vel" to="rwheel_vel"/>
+
+      <rosparam param="Kp">1.5</rosparam>
+      <rosparam param="Ki">0</rosparam>
+      <rosparam param="Kd">0</rosparam>
+    </node>
 
 </launch>
