@@ -5,4 +5,9 @@
         file="$(find nomad)/config/diff_baseController.xml"
         /> 
 
+    <!-- Pose calculation -->
+    <include 
+        file="$(find nomad)/config/poseCalculator.xml"
+        /> 
+
 </launch>

@@ -54,6 +54,11 @@
         respawn="true"
         >
 
+        <!--
+          robot_pose_ekf wants to receive Odometry messages
+          on the "wheel_odom" topic so it can publish to
+          the "odom" topic.
+          -->
         <remap from="odom" to="wheel_odom"/>
     </node>
 
