@@ -17,14 +17,6 @@
 	<rosparam param="wheel_high_wrap">13107</rosparam>
 	<rosparam param="base_width">0.307</rosparam>
 
-    <rosparam param="out_min">-0.8</rosparam>
-    <rosparam param="out_max">0.8</rosparam>
-    <!--
-         "rate" is the differential_drive update frequency
-      -->
-    <rosparam param="rate">10</rosparam>
-    <rosparam param="rolling_pts">2</rosparam>
-    <rosparam param="timeout_ticks">3</rosparam>
 
     <node
         pkg="nomad"
@@ -54,12 +46,16 @@
         respawn="true"
         >
 
-        <!--
-          robot_pose_ekf wants to receive Odometry messages
-          on the "wheel_odom" topic so it can publish to
-          the "odom" topic.
-          -->
         <remap from="odom" to="wheel_odom"/>
+
+	    <rosparam param="out_min">-0.8</rosparam>
+	    <rosparam param="out_max">0.8</rosparam>
+	    <!--
+	         "rate" is the differential_drive update frequency
+	      -->
+	    <rosparam param="rate">1</rosparam>
+	    <rosparam param="rolling_pts">2</rosparam>
+	    <rosparam param="timeout_ticks">3</rosparam>
     </node>
 
     <node

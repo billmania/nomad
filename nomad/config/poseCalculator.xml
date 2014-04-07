@@ -3,7 +3,7 @@
         pkg="nomad"
         type="imu_publisher.py"
         name="imu_publisher"
-        respawn="true"
+        respawn="false"
         >
 
         <param name="imu_port"        value="/dev/ttyUSB0"/>
@@ -21,13 +21,13 @@
         <!--
           Since robot_pose_ekf subscribes to "odom" by
           default, it must be adjusted to instead subscribe
-          to "wheel_odom", so that robot_pose_ekf itself
-          can publish to "odom".
+          to "wheel_odom", so that robot_pose_ekf can be the
+          node which publishes to "odom".
           -->
-        <remap from="odom" to="wheel_odom" />
+        <remap from="odom"           to="wheel_odom" />
 
         <param name="output_frame"   value="odom"/>
-        <param name="freq"           value="30.0"/>
+        <param name="freq"           value="1.0"/>
         <param name="sensor_timeout" value="1.0"/>  
         <param name="odom_used"      value="true"/>
         <param name="imu_used"       value="true"/>
