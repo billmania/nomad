@@ -1,8 +1,8 @@
 <launch>
     <node
         pkg="nomad"
-        type="imu_publisher"
-        name="imu_publisher.py"
+        type="imu_publisher.py"
+        name="imu_publisher"
         respawn="true"
         >
 
