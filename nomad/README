@@ -11,21 +11,24 @@ Install Phidgets library and Python modules
 	Phidgets.py has a syntax error.
 	Change "sys.platform == 'linux'" to "sys.platform == 'linux2'"
 
-Install ROS Hydro
+Install ROS Indigo
   you have two options: install desktop-full, or install comm (bare bones) page and then install:
-    ros-hydro-rospack
-    ros-hydro-navigation
-    ros-hydro-geometry
-    ros-hydro-robot-model
-    ros-hydro-rostopic
-    ros-hydro-xacro
-    ros-hydro-stage
-    ros-hydro-cv-bridge
+    ros-indigo-rospack
+    ros-indigo-navigation
+    ros-indigo-geometry
+    ros-indigo-robot-model
+    ros-indigo-rostopic
+    ros-indigo-xacro
+    ros-indigo-stage
+    ros-indigo-cv-bridge
 Install opencv and opencv python bindings
 Install python-pyproj (GPS nodes requires it)
   sudo apt-get install python-pyproj
-Install differential_drive package from source
+
+Use differential_drive package from source
   http://www.ros.org/wiki/differential_drive
+or from the nomad repository
+
 make sure the current directory (nomad) is on your ROS_PACKAGE_PATH
 chmod +x nodes/*.py
 
