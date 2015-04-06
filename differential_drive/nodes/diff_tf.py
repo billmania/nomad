@@ -5,9 +5,9 @@
    creates tf and odometry messages.
    some code borrowed from the arbotix diff_controller script
    A good reference: http://rossum.sourceforge.net/papers/DiffSteer/
-   
-    Copyright (C) 2012 Jon Stephan. 
-     
+
+    Copyright (C) 2012 Jon Stephan.
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -20,10 +20,10 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
+
    ----------------------------------
    Portions of this code borrowed from the arbotix_python diff_controller.
-   
+
 diff_controller.py - controller for a differential drive
   Copyright (c) 2010-2011 Vanadium Labs LLC.  All right reserved.
 
@@ -34,10 +34,10 @@ diff_controller.py - controller for a differential drive
       * Redistributions in binary form must reproduce the above copyright
         notice, this list of conditions and the following disclaimer in the
         documentation and/or other materials provided with the distribution.
-      * Neither the name of Vanadium Labs LLC nor the names of its 
-        contributors may be used to endorse or promote products derived 
+      * Neither the name of Vanadium Labs LLC nor the names of its
+        contributors may be used to endorse or promote products derived
         from this software without specific prior written permission.
-  
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -72,23 +72,23 @@ class DiffTf:
         rospy.init_node("diff_tf")
         self.nodename = rospy.get_name()
         rospy.loginfo("-I- %s started" % self.nodename)
-        
+
         #### parameters #######
         self.rate = rospy.get_param('~rate',10.0)  # the rate at which to publish the transform
         self.ticks_meter = float(rospy.get_param('ticks_meter', 50))  # The number of wheel encoder ticks per meter of travel
         self.base_width = float(rospy.get_param('~base_width', 0.245)) # The wheel base width in meters
-        
+
         self.base_frame_id = rospy.get_param('~base_frame_id','base_link') # the name of the base frame of the robot
         self.odom_frame_id = rospy.get_param('~odom_frame_id', 'odom') # the name of the odometry reference frame
-        
+
         self.encoder_min = rospy.get_param('encoder_min', -32768)
         self.encoder_max = rospy.get_param('encoder_max', 32768)
         self.encoder_low_wrap = rospy.get_param('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min )
         self.encoder_high_wrap = rospy.get_param('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min )
- 
+
         self.t_delta = rospy.Duration(1.0/self.rate)
         self.t_next = rospy.Time.now() + self.t_delta
-        
+
         # internal data
         self.enc_left = None        # wheel encoder readings
         self.enc_right = None
@@ -98,19 +98,19 @@ class DiffTf:
         self.rmult = 0
         self.prev_lencoder = 0
         self.prev_rencoder = 0
-        self.x = 0                  # position in xy plane 
+        self.x = 0                  # position in xy plane
         self.y = 0
         self.th = 0
         self.dx = 0                 # speeds in x/rotation
         self.dr = 0
         self.then = rospy.Time.now()
-        
+
         # subscriptions
         rospy.Subscriber("lwheel", Int16, self.lwheelCallback)
         rospy.Subscriber("rwheel", Int16, self.rwheelCallback)
         self.odomPub = rospy.Publisher("odom", Odometry)
         self.odomBroadcaster = TransformBroadcaster()
-        
+
     #############################################################################
     def spin(self):
     #############################################################################
@@ -118,8 +118,8 @@ class DiffTf:
         while not rospy.is_shutdown():
             self.update()
             r.sleep()
-       
-     
+
+
     #############################################################################
     def update(self):
     #############################################################################
@@ -128,7 +128,7 @@ class DiffTf:
             elapsed = now - self.then
             self.then = now
             elapsed = elapsed.to_sec()
-            
+
             # calculate odometry
             if self.enc_left == None:
                 d_left = 0
@@ -138,16 +138,16 @@ class DiffTf:
                 d_right = (self.right - self.enc_right) / self.ticks_meter
             self.enc_left = self.left
             self.enc_right = self.right
-           
-            # distance traveled is the average of the two wheels 
+
+            # distance traveled is the average of the two wheels
             d = ( d_left + d_right ) / 2
             # this approximation works (in radians) for small angles
             th = ( d_right - d_left ) / self.base_width
             # calculate velocities
             self.dx = d / elapsed
             self.dr = th / elapsed
-           
-             
+
+
             if (d != 0):
                 # calculate distance traveled in x and y
                 x = cos( th ) * d
@@ -157,7 +157,7 @@ class DiffTf:
                 self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
             if( th != 0):
                 self.th = self.th + th
-                
+
             # publish the odom information
             quaternion = Quaternion()
             quaternion.x = 0.0
@@ -171,7 +171,7 @@ class DiffTf:
                 self.base_frame_id,
                 self.odom_frame_id
                 )
-            
+
             odom = Odometry()
             odom.header.stamp = now
             odom.header.frame_id = self.odom_frame_id
@@ -200,8 +200,8 @@ class DiffTf:
                 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
                 ]
             self.odomPub.publish(odom)
-            
-            
+
+
 
 
     #############################################################################
@@ -210,23 +210,23 @@ class DiffTf:
         enc = msg.data
         if (enc < self.encoder_low_wrap and self.prev_lencoder > self.encoder_high_wrap):
             self.lmult = self.lmult + 1
-            
+
         if (enc > self.encoder_high_wrap and self.prev_lencoder < self.encoder_low_wrap):
             self.lmult = self.lmult - 1
-            
-        self.left = 1.0 * (enc + self.lmult * (self.encoder_max - self.encoder_min)) 
+
+        self.left = 1.0 * (enc + self.lmult * (self.encoder_max - self.encoder_min))
         self.prev_lencoder = enc
-        
+
     #############################################################################
     def rwheelCallback(self, msg):
     #############################################################################
         enc = msg.data
         if(enc < self.encoder_low_wrap and self.prev_rencoder > self.encoder_high_wrap):
             self.rmult = self.rmult + 1
-        
+
         if(enc > self.encoder_high_wrap and self.prev_rencoder < self.encoder_low_wrap):
             self.rmult = self.rmult - 1
-            
+
         self.right = 1.0 * (enc + self.rmult * (self.encoder_max - self.encoder_min))
         self.prev_rencoder = enc
 
@@ -236,6 +236,6 @@ if __name__ == '__main__':
     """ main """
     diffTf = DiffTf()
     diffTf.spin()
-    
-    
-   
+
+
+
