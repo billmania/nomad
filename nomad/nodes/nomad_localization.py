@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # 
-# robomagellan_localization.py
+# nomad_localization.py
 #
 # This node provides two things:
 # - the transform between the /world frame and the /odom frame. 
@@ -37,7 +37,7 @@
 # /odom
 #
 
-import roslib; roslib.load_manifest('robomagellan')
+import roslib; roslib.load_manifest('nomad')
 import rospy
 
 import tf
@@ -45,11 +45,11 @@ import tf
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
 
-from robomagellan.msg import ConeCaptured
+from nomad.msg import ConeCaptured
 
 import math
 
-class RobomagellanLocalization():
+class NomadLocalization():
     def __init__(self):
         # we start with zero offset in our position
         self.current_position_offset = Point()
@@ -61,7 +61,7 @@ class RobomagellanLocalization():
         self.odom = None
         self.transformListener = tf.TransformListener()
         self.br = tf.TransformBroadcaster()
-        rospy.loginfo("RobomagellanLocalization initialized")
+        rospy.loginfo("NomadLocalization initialized")
 
     def publish_localization(self):
         """
@@ -70,7 +70,7 @@ class RobomagellanLocalization():
         #
         # does the TransformBroadcaster() need to be created every time
         # publish_localization is called, or can it be create in the
-        # RobomagellanLocalization() constructor instead?
+        # NomadLocalization() constructor instead?
         #
 #        br = tf.TransformBroadcaster()
 
@@ -121,11 +121,11 @@ class RobomagellanLocalization():
         return recalculate_drift
 
 if __name__ == '__main__':
-    rospy.init_node('robomagellan_localization')
+    rospy.init_node('nomad_localization')
     rospy.sleep(3)  # let rxconsole boot up
     rospy.loginfo("Initializing localization node")
 
-    localization = RobomagellanLocalization()
+    localization = NomadLocalization()
     rospy.Subscriber('/odom', Odometry, localization.setup_odom_combined_callback())
     rospy.Subscriber('/cone_captured', ConeCaptured, localization.setup_cone_captured_callback())
 
