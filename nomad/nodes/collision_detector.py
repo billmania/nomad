@@ -26,7 +26,7 @@ import settings
 class CollisionDetector():
     def __init__(self):
         rospy.loginfo("CollisionDetector loaded")
-        
+
     def setup_collision_info_callback(self):
         publisher = rospy.Publisher('collision', BoolStamped)
         def base_scan_callback(data):
@@ -42,7 +42,7 @@ class CollisionDetector():
     def publish_info(self, scan_data, threshold_distance, publisher):
         detected = False
         for scan in scan_data.ranges:
-            if (scan < threshold_distance): 
+            if (scan < threshold_distance):
                 detected = True
                 break
         info = BoolStamped()
@@ -61,4 +61,4 @@ if __name__ == '__main__':
     rospy.Subscriber('base_scan', LaserScan, collision_detector.setup_obstacle_info_callback())
 
     rospy.spin()
-            
+
