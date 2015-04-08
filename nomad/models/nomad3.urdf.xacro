@@ -63,7 +63,7 @@
         </visual>
     </link>
 
-    <joint name="base_link_to_right_wheel" type="continuous">
+    <joint name="base_link_to_right_wheel" type="fixed">
         <parent link="base_link"/>
         <child link="right_wheel"/>
         <origin xyz="0 ${wheelTrack/2} ${wheelRadius}"/>
@@ -78,7 +78,7 @@
         </visual>
     </link>
 
-    <joint name="base_link_to_left_wheel" type="continuous">
+    <joint name="base_link_to_left_wheel" type="fixed">
         <parent link="base_link"/>
         <child link="left_wheel"/>
         <origin xyz="0 -${wheelTrack/2} ${wheelRadius}"/>
