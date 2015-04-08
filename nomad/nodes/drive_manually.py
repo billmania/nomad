@@ -23,7 +23,7 @@ import time
 from geometry_msgs.msg import Twist
 
 import os
-import sys    
+import sys
 import termios
 import fcntl
 
@@ -66,7 +66,7 @@ def driveLoop():
     while not rospy.is_shutdown():
 
         # read one character
-        while True:            
+        while True:
             try:
               c = sys.stdin.read(1)
               break

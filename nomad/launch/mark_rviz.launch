@@ -1,0 +1,8 @@
+<launch>
+	<param
+		name="robot_description" 
+		command="$(find xacro)/xacro.py '$(find nomad)/models/nomad3.urdf.xacro'"
+	/>
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find nomad)/config/nomad.rviz" />
+</launch>
