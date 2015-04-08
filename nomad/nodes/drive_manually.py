@@ -50,7 +50,7 @@ def driveLoop():
         Twist message, ad infinitum
     """
 
-    drivePublisher = rospy.Publisher('cmd_vel', Twist)
+    drivePublisher = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
 
     twistMessage = Twist()
 
