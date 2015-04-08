@@ -1,14 +1,14 @@
 <launch>
 
     <!-- Motor control -->
-    <include 
+    <include
         file="$(find nomad)/config/diff_baseController.xml"
-        /> 
+        />
 
     <!-- Pose calculation -->
-    <include 
+    <include
         file="$(find nomad)/config/poseCalculator.xml"
-        /> 
+        />
 
     <!-- Transformations -->
     <include 
