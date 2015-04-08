@@ -10,4 +10,19 @@
         file="$(find nomad)/config/poseCalculator.xml"
         />
 
+    <!-- Transformations -->
+    <include 
+        file="$(find nomad)/config/transformations.xml"
+        /> 
+
+    <!-- LiDAR -->
+    <include 
+        file="$(find nomad)/config/sensors.xml"
+        /> 
+
+    <!-- SLAM -->
+    <include 
+        file="$(find nomad)/config/localization-slam.xml"
+        /> 
+
 </launch>

@@ -69,8 +69,8 @@ class PhidgetEncoders:
     
             raise
 
-        self.leftEncoderPublisher = rospy.Publisher('lwheel', Int16)
-        self.rightEncoderPublisher = rospy.Publisher('rwheel', Int16)
+        self.leftEncoderPublisher = rospy.Publisher('lwheel', Int16, queue_size = 10)
+        self.rightEncoderPublisher = rospy.Publisher('rwheel', Int16, queue_size = 10)
 
         return
 
