@@ -33,13 +33,6 @@
         /> 
 
     <node
-        pkg="robot_state_publisher"
-        type="state_publisher"
-        name="robot_state_publisher"
-        respawn="true"
-        />
-
-    <node
         pkg="differential_drive"
         type="diff_tf.py"
         name="diff_tf"

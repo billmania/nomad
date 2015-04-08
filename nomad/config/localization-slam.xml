@@ -13,4 +13,13 @@
         respawn="true"
     />
 
+    <!-- map server -->
+    <node
+	name="map_server"
+	pkg="map_server"
+	type="map_server"
+	args="$(find nomad)/worlds/empty-map.yaml"
+	respawn="true"
+    />
+
 </launch>

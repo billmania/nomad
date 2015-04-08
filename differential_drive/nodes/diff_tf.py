@@ -108,7 +108,7 @@ class DiffTf:
         # subscriptions
         rospy.Subscriber("lwheel", Int16, self.lwheelCallback)
         rospy.Subscriber("rwheel", Int16, self.rwheelCallback)
-        self.odomPub = rospy.Publisher("odom", Odometry)
+        self.odomPub = rospy.Publisher("odom", Odometry, queue_size = 10)
         self.odomBroadcaster = TransformBroadcaster()
 
     #############################################################################

@@ -78,8 +78,8 @@ class PidVelocity():
         #### subscribers/publishers 
         rospy.Subscriber("wheel", Int16, self.wheelCallback) 
         rospy.Subscriber("wheel_vtarget", Float32, self.targetCallback) 
-        self.pub_motor = rospy.Publisher('motor_cmd',Float32) 
-        self.pub_vel = rospy.Publisher('wheel_vel', Float32)
+        self.pub_motor = rospy.Publisher('motor_cmd',Float32, queue_size = 10) 
+        self.pub_vel = rospy.Publisher('wheel_vel', Float32, queue_size = 10)
    
         
     #####################################################

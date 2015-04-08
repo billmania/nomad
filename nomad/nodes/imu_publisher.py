@@ -68,7 +68,7 @@ imuUpdateHz   = rospy.get_param('imuUpdateHz', 10.0);
 imu_port      = rospy.get_param('imu_port', '/dev/ttyUSB0');
 imu_baud_rate = rospy.get_param('imu_baud_rate', 38400);
 
-publisher = rospy.Publisher('imu_data', Imu)
+publisher = rospy.Publisher('imu_data', Imu, queue_size = 10)
 
 try:
     imu = serial.Serial(
