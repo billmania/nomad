@@ -161,6 +161,7 @@ while not rospy.is_shutdown():
         eulerRoll = float(imuFields[1])
         eulerPitch = float(imuFields[2])
         eulerYaw = float(imuFields[3])
+        rospy.loginfo('Yaw %f' % eulerYaw)
 
     except:
         print 'Euler angle exception'

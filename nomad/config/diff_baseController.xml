@@ -4,7 +4,7 @@
 	<rosparam param="ticks_meter">2388</rosparam>
 	<rosparam param="maxMetersPerSecond">0.603</rosparam>
 	<rosparam param="minMetersPerSecond">0.100</rosparam>
-	<rosparam param="motorUpdateHz">1.0</rosparam>
+	<rosparam param="motorUpdateHz">20.0</rosparam>
 	<rosparam param="rightMotorDirectionSign">1</rosparam>
 	<rosparam param="leftMotorDirectionSign">-1</rosparam>
 	<rosparam param="leftMotorId">0</rosparam>
@@ -12,7 +12,7 @@
 
 	<rosparam param="encoder_min">-32767</rosparam>
 	<rosparam param="encoder_max">32767</rosparam>
-	<rosparam param="encoderUpdateHz">1.0</rosparam>
+	<rosparam param="encoderUpdateHz">20.0</rosparam>
 	<rosparam param="wheel_low_wrap">9830</rosparam>
 	<rosparam param="wheel_high_wrap">13107</rosparam>
 	<rosparam param="base_width">0.307</rosparam>
@@ -46,8 +46,8 @@
 	    <!--
 	         "rate" is the differential_drive update frequency
 	      -->
-	    <rosparam param="rate">1</rosparam>
-	    <rosparam param="rolling_pts">2</rosparam>
+	    <rosparam param="rate">20</rosparam>
+	    <rosparam param="rolling_pts">5</rosparam>
 	    <rosparam param="timeout_ticks">3</rosparam>
     </node>
 
@@ -73,7 +73,7 @@
       <remap from="wheel_vtarget" to="lwheel_vtarget"/>
       <remap from="wheel_vel" to="lwheel_vel"/>
 
-      <rosparam param="Kp">1.5</rosparam>
+      <rosparam param="Kp">1</rosparam>
       <rosparam param="Ki">0</rosparam>
       <rosparam param="Kd">0</rosparam>
     </node>
@@ -90,7 +90,7 @@
       <remap from="wheel_vtarget" to="rwheel_vtarget"/>
       <remap from="wheel_vel" to="rwheel_vel"/>
 
-      <rosparam param="Kp">1.5</rosparam>
+      <rosparam param="Kp">1</rosparam>
       <rosparam param="Ki">0</rosparam>
       <rosparam param="Kd">0</rosparam>
     </node>
