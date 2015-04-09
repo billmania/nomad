@@ -14,7 +14,7 @@ publishes to:
  /obstacle
 
 """
-
+import random
 import roslib; roslib.load_manifest('nomad')
 import rospy
 
@@ -26,14 +26,21 @@ from geometry_msgs.msg import Twist
 
 class CollisionDetector():
 
-
     def __init__(self):
 
 	self.twistMessage =  Twist()
 	self.avoidTwistMessage = Twist()
 
 	self.avoidTwistMessage.linear.x = 0.0
-	self.avoidTwistMessage.angular.z = 1.0
+
+	# Randomly choose a direction of angular movement
+	toss=random.randint(0,1)
+
+	if toss == 0:
+	    self.avoidTwistMessage.angular.z = -1.0
+	else:
+	    self.avoidTwistMessage.angular.z = 1.0
+
 
         rospy.loginfo("Initializing collision_detector node with distance threshold %0.1f" % (1))
 
@@ -45,7 +52,7 @@ class CollisionDetector():
 	
 	# get most recent twist on cmd_vel
 	self.cmd_vel1 = rospy.Subscriber('cmd_vel', Twist, self.handleTwistMessage)
-
+	
 	# callback on laser
         self.callback = rospy.Subscriber('scan', LaserScan, self.laser_callback)
 
@@ -80,8 +87,10 @@ class CollisionDetector():
 
     def laser_callback(self, msg):
 
-#        detected = False
-
+	if self.twistMessage.linear.x == 0 and self.twistMessage.angular.y == 0:
+ 	    self.filtered_cmd_vel1.publish(self.twistMessage)
+	    return
+		
         for scan in msg.ranges:
             if (scan < 1):
 		self.obstacle_detected.data = True	
