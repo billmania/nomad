@@ -20,6 +20,13 @@
 
     <node
         pkg="nomad"
+        type="obstacle_detect_and_avoid.py"
+        name="obstacle_detect_and_avoid"
+        respawn="true"
+        />
+    
+    <node
+        pkg="nomad"
         type="diff_baseController.py"
         name="diff_baseController"
         respawn="true"
@@ -58,7 +65,7 @@
         respawn="true"
         >
 
-        <remap from="twist" to="cmd_vel"/>
+        <remap from="twist" to="filtered_cmd_vel"/>
     </node>
 
     <node
