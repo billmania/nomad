@@ -5,7 +5,6 @@
 collision_detector
 - monitors the robot's distance sensors, and sends out a collision message
   whenever the distance is small enough
-
 listens to:
  /base_scan
 
@@ -32,24 +31,14 @@ class CollisionDetector():
 	self.avoidTwistMessage = Twist()
 
 	self.avoidTwistMessage.linear.x = 0.0
+	self.detection_threshold = 0.5
 
-	# Randomly choose a direction of angular movement
-	toss=random.randint(0,1)
-
-	if toss == 0:
-	    self.avoidTwistMessage.angular.z = -1.0
-	else:
-	    self.avoidTwistMessage.angular.z = 1.0
-
-
-        rospy.loginfo("Initializing collision_detector node with distance threshold %0.1f" % (1))
+        rospy.loginfo("Initializing collision_detector node with distance threshold %0.1f" % (self.detection_threshold))
 
         self.obstacle_detected = Bool()
 
 	self.obstacle_detected.data = True
 
-        self.collision_threshold = 1
-	
 	# get most recent twist on cmd_vel
 	self.cmd_vel1 = rospy.Subscriber('cmd_vel', Twist, self.handleTwistMessage)
 	
@@ -90,11 +79,36 @@ class CollisionDetector():
 	if self.twistMessage.linear.x == 0 and self.twistMessage.angular.y == 0:
  	    self.filtered_cmd_vel1.publish(self.twistMessage)
 	    return
-		
-        for scan in msg.ranges:
-            if (scan < 1):
+
+        min_scan_angle = msg.angle_min
+        max_scan_angle = msg.angle_max
+        num_scan_pts = len(msg.ranges)	
+	scan_angle_incr = msg.angle_increment
+
+	print min_scan_angle,max_scan_angle,num_scan_pts
+
+	# Post 'avoid' twist message if object is within 1 meter 
+	# in the specified range.
+	# The range values given are attempting to go from -45
+	# -> 45 field of view and assume the scan values range from
+	# 0 -> 180.  
+
+	min_ind = len(msg.ranges)/4
+	max_ind = 3*len(msg.ranges)/4
+			
+        for scan in msg.ranges[min_ind:max_ind]:
+
+            if (scan < self.detection_threshold):
 		self.obstacle_detected.data = True	
         	self.obstaclePublisher.publish(self.obstacle_detected)
+
+		# Randomly choose a direction of angular movement
+		toss=random.randint(0,1)
+
+		if toss == 0:
+	    	    self.avoidTwistMessage.angular.z = 1.0
+		else:
+	    	    self.avoidTwistMessage.angular.z = 1.0
 
 		self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
@@ -105,7 +119,7 @@ class CollisionDetector():
 
 if __name__ == '__main__':
 
-    rospy.init_node('collision_detector')
+    rospy.init_node('obstacle_detect_and_avoid')
 
     collision_detector = CollisionDetector()
 
