@@ -95,7 +95,17 @@ class CollisionDetector():
 
 	min_ind = len(msg.ranges)/4
 	max_ind = 3*len(msg.ranges)/4
-			
+
+	backup = 0
+
+	for scan in msg.ranges[0:min_ind]:
+            if (scan < self.detection_threshold):	
+		backup = 1			
+
+	for scan in msg.ranges[max_ind:]:
+            if (scan < self.detection_threshold):	
+		backup = 1			
+	
         for scan in msg.ranges[min_ind:max_ind]:
 
             if (scan < self.detection_threshold):
@@ -107,8 +117,10 @@ class CollisionDetector():
 
 		if toss == 0:
 	    	    self.avoidTwistMessage.angular.z = 1.0
+	    	    self.avoidTwistMessage.linear.x = -1.0*backup
 		else:
 	    	    self.avoidTwistMessage.angular.z = 1.0
+	    	    self.avoidTwistMessage.linear.x = -1.0*backup
 
 		self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
