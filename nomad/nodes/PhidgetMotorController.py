@@ -16,7 +16,7 @@ from settings import rotationWheelSpeed, translationWheelSpeed
 #
 # different values for different surfaces, to minimize slippage
 # 
-# hardwood floor 10
+# hardwood or waxed concrete floor 10
 # sealed pavement 20
 # grass 50
 # rough concrete 60
@@ -83,7 +83,7 @@ class PhidgetMotorController:
         self.minAcceleration = self.motorControl.getAccelerationMin(self.leftWheels)
         self.maxAcceleration = self.motorControl.getAccelerationMax(self.leftWheels)
 
-        self.currentAcceleration = self.minAcceleration + 25
+        self.currentAcceleration = self.minAcceleration + ACCELERATION
         try:
             self.motorControl.setAcceleration(self.leftWheels, self.currentAcceleration)
             self.motorControl.setAcceleration(self.rightWheels, self.currentAcceleration)
