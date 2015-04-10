@@ -2,17 +2,14 @@
 
 """
 
-collision_detector
-- monitors the robot's distance sensors, and sends out a collision message
-  whenever the distance is small enough
-listens to:
- /base_scan
+obstacle detector and collision avoider
 
-publishes to:
- /collision
- /obstacle
+- monitors the LaserScan messages, watching for ranges which are
+  less than a threshold. Adjusts the rovers direction to avoid
+  collision.
 
 """
+
 import random
 import roslib; roslib.load_manifest('nomad')
 import rospy
@@ -32,7 +29,7 @@ class CollisionDetector():
         self.avoidTwistMessage.angular.z = 0.0
         self.minimum_range_to_obstacle = 0.7 # meters
         self.backup_speed = 0.3 # meters per second
-        self.turn_speed = 0.5 # radians per second
+        self.turn_speed = 0.7 # radians per second
         self.already_turning = False
         self.turn_direction = random.choice([-1, 1])
         #
@@ -88,17 +85,17 @@ class CollisionDetector():
         #
         # Divide the scan data into three sections: the left quarter, the middle half
         # and the right quarter. This logic assumes the LiDAR has a Field of View of
-        # 180 degrees.
+        # 180 degrees. From the front section, extract the small section which is
+        # most directly in front of the rover.
         #
-        end_of_left_side = len(msg.ranges)/4
-        begin_of_right_side = 3*len(msg.ranges)/4
+        number_of_ranges = len(msg.ranges)
+        end_of_left_side = number_of_ranges / 4
+        begin_of_right_side = 3 * number_of_ranges / 4
 
-        left_side = msg.ranges[0:end_of_left_side]
-        right_side = msg.ranges[begin_of_right_side:]
-        front = msg.ranges[end_of_left_side:begin_of_right_side]
-        left_side = sorted(left_side)
-        right_side = sorted(right_side)
-        front = sorted(front)
+        left_side = sorted(msg.ranges[0:end_of_left_side])
+        right_side = sorted(msg.ranges[begin_of_right_side:])
+        front = sorted(msg.ranges[end_of_left_side:begin_of_right_side])
+        far_front = sorted(msg.ranges[7 * number_of_ranges / 16:9 * number_of_ranges / 16])
 
         something_on_the_left = left_side[self.range_to_examine] < self.minimum_range_to_obstacle
         something_on_the_right = right_side[self.range_to_examine] < self.minimum_range_to_obstacle
@@ -129,7 +126,7 @@ class CollisionDetector():
                 self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
         else:
-            if front[self.range_to_examine] < (self.minimum_range_to_obstacle * 1.05):
+            if far_front[self.range_to_examine] < (self.minimum_range_to_obstacle * 1.5):
                 # the rover is approaching something in the distance
                 rospy.logdebug('Something approaching')
                 self.twistMessage.linear.x = self.twistMessage.linear.x / 2.0
