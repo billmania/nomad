@@ -169,7 +169,7 @@ class PhidgetEncoders:
 if __name__ == "__main__":
     rospy.init_node(
         name = 'diff_wheelEncoders',
-        log_level = rospy.DEBUG
+        log_level = rospy.INFO
         )
     rospy.sleep(3.0)
     rospy.loginfo("Initializing diff_wheelEncoders.py")
