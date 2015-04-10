@@ -30,8 +30,9 @@ class CollisionDetector():
         self.avoidTwistMessage = Twist()
 
         self.avoidTwistMessage.linear.x = 0.0
-        self.detection_threshold = 0.5
-        self.backup_speed = 0.6
+        self.detection_threshold = 0.7
+        self.backup_speed = 0.3
+        self.turn_speed = 0.5
         self.in_front = False
 
         rospy.loginfo("Initializing collision_detector node with distance threshold %0.1f" % (self.detection_threshold))
@@ -101,9 +102,9 @@ class CollisionDetector():
                 self.avoidTwistMessage.linear.x = -1.0*self.backup_speed*backup
 
                 if toss == 0:
-                    self.avoidTwistMessage.angular.z = 1.0
+                    self.avoidTwistMessage.angular.z = self.turn_speed
                 else:
-                    self.avoidTwistMessage.angular.z = -1.0
+                    self.avoidTwistMessage.angular.z = -(self.turn_speed)
 
                 self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
