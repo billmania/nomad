@@ -82,12 +82,10 @@ class CollisionDetector():
         for scan in msg.ranges[0:min_ind]:
             if (scan < self.detection_threshold):
                 backup = 1
-                break
 
         for scan in msg.ranges[max_ind:]:
             if (scan < self.detection_threshold):
                 backup = 1
-                break
 
         for scan in msg.ranges[min_ind:max_ind]:
             if (scan < self.detection_threshold):
@@ -105,7 +103,7 @@ class CollisionDetector():
                 if toss == 0:
                     self.avoidTwistMessage.angular.z = 1.0
                 else:
-                    self.avoidTwistMessage.angular.z = 1.0
+                    self.avoidTwistMessage.angular.z = -1.0
 
                 self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
@@ -118,8 +116,6 @@ class CollisionDetector():
 if __name__ == '__main__':
 
     rospy.init_node('obstacle_detect_and_avoid')
-
     collision_detector = CollisionDetector()
-
     rospy.spin()
 
