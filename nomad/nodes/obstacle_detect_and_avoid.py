@@ -28,27 +28,28 @@ class CollisionDetector():
     def __init__(self):
         self.twistMessage =  Twist()
         self.avoidTwistMessage = Twist()
-        
+
         self.avoidTwistMessage.linear.x = 0.0
         self.detection_threshold = 0.5
         self.backup_speed = 0.6
-        
+        self.in_front = False
+
         rospy.loginfo("Initializing collision_detector node with distance threshold %0.1f" % (self.detection_threshold))
-        
+
         self.obstacle_detected = Bool()
-        
+
         self.obstacle_detected.data = True
-        
+
         # get most recent twist on cmd_vel
         self.cmd_vel1 = rospy.Subscriber('cmd_vel', Twist, self.handleTwistMessage)
-        
+
         # callback on laser
         self.callback = rospy.Subscriber('scan', LaserScan, self.laser_callback)
-        
-        self.filtered_cmd_vel1 = rospy.Publisher('filtered_cmd_vel',Twist, queue_size = 10)     
-        
+
+        self.filtered_cmd_vel1 = rospy.Publisher('filtered_cmd_vel',Twist, queue_size = 10)
+
         self.filtered_cmd_vel1.publish(self.twistMessage)
-        
+
         self.obstaclePublisher = rospy.Publisher('obstacle', Bool, queue_size = 10)
 
     def handleTwistMessage(self,twistMessage):
@@ -58,7 +59,7 @@ class CollisionDetector():
             ))
 
         self.twistMessage = twistMessage
-        
+
         return
 
     def laser_callback(self, msg):
@@ -67,11 +68,11 @@ class CollisionDetector():
             self.filtered_cmd_vel1.publish(self.twistMessage)
             return
 
-        # Post 'avoid' twist message if object is within 1 meter 
+        # Post 'avoid' twist message if object is within 1 meter
         # in the specified range.
         # The range values given are attempting to go from -45
         # -> 45 field of view and assume the scan values range from
-        # 0 -> 180.  
+        # 0 -> 180.
 
         min_ind = len(msg.ranges)/4
         max_ind = 3*len(msg.ranges)/4
@@ -79,20 +80,26 @@ class CollisionDetector():
         backup = 0
 
         for scan in msg.ranges[0:min_ind]:
-            if (scan < self.detection_threshold):    
+            if (scan < self.detection_threshold):
                 backup = 1
+                break
 
         for scan in msg.ranges[max_ind:]:
-            if (scan < self.detection_threshold):    
+            if (scan < self.detection_threshold):
                 backup = 1
-    
+                break
+
         for scan in msg.ranges[min_ind:max_ind]:
             if (scan < self.detection_threshold):
-                self.obstacle_detected.data = True    
+                self.obstacle_detected.data = True
                 self.obstaclePublisher.publish(self.obstacle_detected)
 
                 # Randomly choose a direction of angular movement
-                toss=random.randint(0,1)
+                if not self.in_front:
+                    toss=random.randint(0,1)
+
+                self.in_front = True
+
                 self.avoidTwistMessage.linear.x = -1.0*self.backup_speed*backup
 
                 if toss == 0:
@@ -102,10 +109,11 @@ class CollisionDetector():
 
                 self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
 
-                return                
+                return
 
+        self.in_front = False
         self.filtered_cmd_vel1.publish(self.twistMessage)
-    
+
 
 if __name__ == '__main__':
 
