@@ -25,4 +25,8 @@
         file="$(find nomad)/config/localization-slam.xml"
         /> 
 
+    <!--
+    <node name="image_subscriber_node" pkg="image_subscriber" type="image_subscriber_node" respawn="true" />   
+    -->
+
 </launch>
