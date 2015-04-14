@@ -158,10 +158,10 @@ while not rospy.is_shutdown():
 
     # Euler angles in degrees
     try:
-        eulerRoll = float(imuFields[1])
-        eulerPitch = float(imuFields[2])
+        eulerRoll = (float(imuFields[1]) + 180) % 360
+        eulerPitch = -(float(imuFields[2]))
         eulerYaw = float(imuFields[3])
-        rospy.loginfo('Yaw %f' % eulerYaw)
+        rospy.logdebug('Euler %0.1f, %0.1f, %0.1f' % (eulerRoll, eulerPitch, eulerYaw))
 
     except:
         print 'Euler angle exception'
