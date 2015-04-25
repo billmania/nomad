@@ -4,7 +4,7 @@
         pkg="nomad"
         type="imu_publisher.py"
         name="imu_publisher"
-        respawn="false"
+        respawn="true"
         >
 
         <param name="imu_port"        value="/dev/ttyUSB0"/>
