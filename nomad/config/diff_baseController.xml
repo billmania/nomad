@@ -17,14 +17,6 @@
 	<rosparam param="wheel_high_wrap">13107</rosparam>
 	<rosparam param="base_width">0.307</rosparam>
 
-
-    <node
-        pkg="nomad"
-        type="obstacle_detect_and_avoid.py"
-        name="obstacle_detect_and_avoid"
-        respawn="true"
-        />
-    
     <node
         pkg="nomad"
         type="diff_baseController.py"
@@ -65,7 +57,7 @@
         respawn="true"
         >
 
-        <remap from="twist" to="filtered_cmd_vel"/>
+        <remap from="twist" to="cmd_vel"/>
     </node>
 
     <node

@@ -10,12 +10,12 @@
     <param name="oscillation_timeout" value="30.0" />
     <param name="oscillation_distance" value="0.5" />
 
-    <rosparam file="$(find robomagellan)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find robomagellan)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
-    <rosparam file="$(find robomagellan)/config/local_costmap_params.yaml" command="load" />
-    <rosparam file="$(find robomagellan)/config/global_costmap_params.yaml" command="load" />
-    <rosparam file="$(find robomagellan)/config/base_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find nomad)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find nomad)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find nomad)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find nomad)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find nomad)/config/base_local_planner_params.yaml" command="load" />
 
-    <remap from="cmd_vel" to="cmd_vel_move_base"/>
+    <remap from="base_scan" to="scan"/>
   </node>
 </launch>

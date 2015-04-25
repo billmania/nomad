@@ -25,6 +25,11 @@
         file="$(find nomad)/config/localization-slam.xml"
         /> 
 
+    <!-- Path planning -->
+    <include 
+        file="$(find nomad)/config/move_base.xml"
+        /> 
+
     <!-- OCR
     <node
 	name="image_subscriber_node"
