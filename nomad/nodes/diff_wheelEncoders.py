@@ -1,37 +1,41 @@
 #!/usr/bin/env python
 
 """
-PhidgetsEncoders() - Read the encoder values from a
-	Phidgets 1047, filter the data a bit and then
-	publish the Odometry message.
+diff_wheelEncoders.py
+Bill Mania <bill@manialabs.us>
 
-    Looking at the top of the encoder board, with the
-    digital input terminals on the right and the
-    encoder inputs on the top, encoder port number 0
-    is at the top right and port 3 is at the top left.
+Read encoder values from the Arduino encoder controller
+and publish them.
 
 """
 
 import roslib; roslib.load_manifest('nomad')
 import rospy
+import serial
 from std_msgs.msg import Int16
 
-from Phidgets.Devices.Encoder import Encoder
-from Phidgets.PhidgetException import PhidgetException
+class Encoders:
+    """
+    Encoders: read the incoming encoder data and publish to separate
+    topics
 
-class PhidgetEncoders:
+    open the serial port
+    read the values as fast as they arrive and
+     publish the updates
+
+    """
 
     def __init__(
         self,
-        leftEncoder,
-        rightEncoder,
+        encoderPort,
+        encoderDataRate,
         leftSignAdjust,
         rightSignAdjust,
         rollover
         ):
 
-        self.leftEncoderId = leftEncoder
-        self.rightEncoderId = rightEncoder
+        self.device = encoderPort
+        self.dataRate = encoderDataRate
         self.leftSignAdjust = leftSignAdjust
         self.rightSignAdjust = rightSignAdjust
         self.rollover = rollover
@@ -39,162 +43,121 @@ class PhidgetEncoders:
         self.leftEncoder = Int16(0)
         self.rightEncoder = Int16(0)
 
-        self.encoder = Encoder()
-
-        self.encoder.setOnAttachHandler(self.encoderAttached)
-        self.encoder.setOnDetachHandler(self.encoderDetached)
-        self.encoder.setOnErrorhandler(self.encoderError)
-        self.encoder.setOnInputChangeHandler(self.encoderInputChanged)
-        self.encoder.setOnPositionChangeHandler(self.encoderPositionChange)
+        self.encoderDevice = None
 
         try:
-            rospy.logdebug('openPhidget()')
-            self.encoder.openPhidget()
+            self.encoderDevice = serial.Serial(
+                port = self.device,
+                baudrate = self.dataRate,
+                timeout = 1
+                )
+            self.encoderDevice.setRTS(level = True)
+            self.encoderDevice.setDTR(level = True)
 
-        except PhidgetException, e:
-            rospy.logerror("openPhidget() failed")
+        except serial.SerialException, e:
+            self.encoderDevice = None
+            rospy.logerror("Encoder initialization failed")
             rospy.logerror("code: %d" % e.code)
-            rospy.logerror("message", e.message)
+            rospy.logerror("message: ", e.message)
 
-            raise
+            rospy.signal_shutdown('Failed to initialize encoders')
+            return
 
-        try:
-            rospy.logdebug('waitForAttach()')
-            self.encoder.waitForAttach(10000)
-
-        except PhidgetException, e:
-            rospy.logerror("waitForAttach() failed")
-            rospy.logerror("code: %d" % e.code)
-            rospy.logerror("message", e.message)
-    
-            raise
+        #
+        # Align at the beginning of a complete message
+        #
+        characterRead = ''
+        while True:
+            characterRead = self.encoderDevice.read(size = 1)
+            if characterRead == '\n':
+                break
+        rospy.logdebug('Messages aligned')
 
         self.leftEncoderPublisher = rospy.Publisher('lwheel', Int16, queue_size = 10)
         self.rightEncoderPublisher = rospy.Publisher('rwheel', Int16, queue_size = 10)
 
         return
 
-    def encoderPositionChange(self, e):
-        """Called each time the encoder reports a change to its position."""
-
-        return
-
     def updatePulseValues(self):
+        """updatePulseValues(): read the most recent encoder values
 
-        leftPulses = (self.leftSignAdjust * self.encoder.getPosition(self.leftEncoderId))
-        rightPulses = (self.rightSignAdjust * self.encoder.getPosition(self.rightEncoderId))
+        """
 
+        rospy.logdebug('updatePulseValues()')
+        if not self.encoderDevice:
+            return
 
-        rospy.logdebug('leftEncoder: %d' % (
-            leftPulses
+        characterRead = ''
+        encoderData = ''
+        while True:
+            characterRead = self.encoderDevice.read(size = 1)
+            if len(characterRead) < 1:
+                rospy.logdebug('Timeout reading from encoder')
+                return
+    
+            if characterRead == '\n':
+                break
+    
+            encoderData = encoderData + characterRead
+            continue
+    
+        rospy.logdebug('Raw encoder message %s ' % encoderData)
+        encoderFields = encoderData.split(',')
+        if len(encoderFields) < 4:
+            rospy.logwarn('Failed to parse Encoder message')
+            return
+
+        timestamp = int(encoderFields[0])
+        leftPulses = (self.leftSignAdjust * int(encoderFields[1]))
+        rightPulses = (self.rightSignAdjust * int(encoderFields[2]))
+        encoderVersion = encoderFields[3]
+
+        rospy.logdebug('Time: %d, left: %d, right: %d, %s' % (
+            timestamp,
+            leftPulses,
+            rightPulses,
+            encoderVersion
             ))
-        rospy.logdebug('rightEncoder: %d' % (
-            rightPulses
-            ))
-
-        #
-        # actively manage the encoder value rollover. The encoder value,
-        # when rolling forward, will start at 0 and move toward self.rollover.
-        # When it exceeds self.rollover, it is reset to -self.rollover plus
-        # the amount by which it exceeded self.rollover.
-        #
-        if leftPulses > self.rollover:
-            rospy.logdebug('left rolled over forward')
-            leftPulses = leftPulses - self.rollover
-            self.encoder.setPosition(
-                self.leftEncoderId,
-                leftPulses
-                )
-        elif leftPulses < -(self.rollover):
-            rospy.logdebug('left rolled over backward')
-            leftPulses = leftPulses + self.rollover
-            self.encoder.setPosition(
-                self.leftEncoderId,
-                leftPulses
-                )
-        if rightPulses > self.rollover:
-            rospy.logdebug('right rolled over forward')
-            rightPulses = rightPulses - self.rollover
-            self.encoder.setPosition(
-                self.rightEncoderId,
-                rightPulses
-                )
-        elif rightPulses < -(self.rollover):
-            rospy.logdebug('right rolled over backward')
-            rightPulses = rightPulses + self.rollover
-            self.encoder.setPosition(
-                self.rightEncoderId,
-                rightPulses
-                )
 
         self.leftEncoder.data = leftPulses
         self.rightEncoder.data = rightPulses
 
         return
 
-    def encoderAttached(self, e):
-        rospy.loginfo('encoderAttached() called')
-
-        self.encoder.setPosition(
-                self.leftEncoderId,
-                0
-                )
-        self.encoder.setPosition(
-                self.rightEncoderId,
-                0
-                )
-        self.encoder.setEnabled(
-                self.leftEncoderId,
-                True
-                )
-        self.encoder.setEnabled(
-                self.rightEncoderId,
-                True
-                )
-
-        return
-    
-    def encoderDetached(self, e):
-        rospy.loginfo('encoderDetached() called')
-        return
-    
-    def encoderError(self, e):
-        rospy.loginfo('encoderError() called')
-        return
-    
-    def encoderInputChanged(self, e):
-        rospy.loginfo('encoderInputChanged() called')
-        return
-    
 if __name__ == "__main__":
     rospy.init_node(
         name = 'diff_wheelEncoders',
         log_level = rospy.INFO
         )
     rospy.sleep(3.0)
-    rospy.loginfo("Initializing diff_wheelEncoders.py")
+    rospy.loginfo("Starting diff_wheelEncoders.py")
 
-    rightMotorDirectionSign = rospy.get_param("rightMotorDirectionSign", 1)
-    leftMotorDirectionSign  = rospy.get_param("leftMotorDirectionSign", -1)
-    leftMotorId             = rospy.get_param("leftMotorId", 0)
-    rightMotorId            = rospy.get_param("rightMotorId", 1)
-    encoderUpdateHz         = rospy.get_param("encoderUpdateHz", 10.0)
+    encoderPort             = rospy.get_param("encoderPort", '/dev/ttyACM0')
+    encoderDataRate         = rospy.get_param("encoderDataRate", 9600)
+    rightMotorDirectionSign = rospy.get_param("rightMotorDirectionSign", -1)
+    leftMotorDirectionSign  = rospy.get_param("leftMotorDirectionSign", 1)
     encoderMax              = rospy.get_param("encoder_max", 65535)
+    rospy.logdebug('Params: %s, %d, %d, %d, %d' % (
+        encoderPort,
+        encoderDataRate,
+        rightMotorDirectionSign,
+        leftMotorDirectionSign,
+        encoderMax
+        ))
 
-    encoder = PhidgetEncoders(
-        leftMotorId,
-        rightMotorId,
+    encoder = Encoders(
+        encoderPort,
+        encoderDataRate,
         leftMotorDirectionSign,
         rightMotorDirectionSign,
         encoderMax
         )
 
-    encoderUpdate = rospy.Rate(encoderUpdateHz)
+    rospy.loginfo('Initialized')
+
     while not rospy.is_shutdown():
         encoder.updatePulseValues()
 
         encoder.leftEncoderPublisher.publish(encoder.leftEncoder)
         encoder.rightEncoderPublisher.publish(encoder.rightEncoder)
-
-        encoderUpdate.sleep()
 
