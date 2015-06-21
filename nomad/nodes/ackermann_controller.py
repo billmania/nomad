@@ -26,7 +26,10 @@ class TraxxasController():
 
     maxSteerAngle = 0.7854
     maxSteerControl = 254
-    scalingFactor = maxSteerControl / (maxSteerAngle * 2)
+    steerScalingFactor = maxSteerControl / (maxSteerAngle * 2)
+    maxSpeed = 0.8
+    maxSpeedControl = 254
+    speedScalingFactor = maxSpeedControl / (maxSpeed * 2)
 
     syncMarker = chr(255)
     steerServo = 7
@@ -88,14 +91,20 @@ class TraxxasController():
             steerAngle = self.maxSteerAngle
         elif steerAngle < -(self.maxSteerAngle):
             steerAngle = -(self.maxSteerAngle)
-        steerControl = (steerAngle * -1 + self.maxSteerAngle) * self.scalingFactor
-        rospy.logdebug('Steer angle: %2.1f, Velocity: %2.1f, Steer: %d' % (
+        steerControl = (steerAngle * -1 + self.maxSteerAngle) * self.steerScalingFactor
+        if velocity > self.maxSpeed:
+            velocity = self.maxSpeed
+        elif velocity < -(self.maxSpeed):
+            velocity = -(self.maxSpeed)
+        speedControl = (velocity + self.maxSpeed) * self.speedScalingFactor
+        rospy.logdebug('Steer angle: %2.1f, Velocity: %2.1f, Steer: %d, Velocity: %d' % (
             steerAngle,
             velocity,
-            steerControl
+            steerControl,
+            speedControl
             ))
         self.control(self.steerServo, int(steerControl))
-        self.control(self.speedServo, self.stopSpeed)
+        self.control(self.speedServo, int(speedControl))
 
         return
 
