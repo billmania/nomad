@@ -87,16 +87,24 @@ class TraxxasController():
         steerAngle = controlMessage.drive.steering_angle
         velocity = controlMessage.drive.speed
 
-        if steerAngle > self.maxSteerAngle:
-            steerAngle = self.maxSteerAngle
-        elif steerAngle < -(self.maxSteerAngle):
-            steerAngle = -(self.maxSteerAngle)
-        steerControl = (steerAngle * -1 + self.maxSteerAngle) * self.steerScalingFactor
-        if velocity > self.maxSpeed:
-            velocity = self.maxSpeed
-        elif velocity < -(self.maxSpeed):
-            velocity = -(self.maxSpeed)
-        speedControl = (velocity + self.maxSpeed) * self.speedScalingFactor
+        if steerAngle >= self.maxSteerAngle:
+            rospy.logdebug('Steering angle too far left')
+            steerControl = self.fullLeftSteer
+        elif steerAngle <= -(self.maxSteerAngle):
+            rospy.logdebug('Steering angle too far right')
+            steerControl = self.fullRightSteer
+        else:
+            steerControl = (steerAngle * -1 + self.maxSteerAngle) * self.steerScalingFactor
+
+        if velocity >= self.maxSpeed:
+            rospy.logdebug('Velocity set too far forward')
+            speedControl = self.maxSpeedControl
+        elif velocity <= -(self.maxSpeed):
+            rospy.logdebug('Velocity set too far reverse')
+            speedControl = -(self.maxSpeedControl)
+        else:
+            speedControl = (velocity + self.maxSpeed) * self.speedScalingFactor
+
         rospy.logdebug('Steer angle: %2.1f, Velocity: %2.1f, Steer: %d, Velocity: %d' % (
             steerAngle,
             velocity,
