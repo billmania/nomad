@@ -25,9 +25,9 @@
     <!--
 	 The definitions for the wheels.
 	 -->
-    <xacro:property name="wheelRadius"    value="0.096" />
-    <xacro:property name="wheelWidth"     value="0.050" />
-    <xacro:property name="wheelTrack"     value="0.307" />
+    <xacro:property name="wheelRadius"    value="0.073" />
+    <xacro:property name="wheelWidth"     value="0.085" />
+    <xacro:property name="wheelTrack"     value="0.31" />
     <xacro:property name="axleHeight"     value="${wheelRadius}" />
 
     <!--
@@ -36,8 +36,8 @@
     <xacro:property name="lidarLength"    value="0.085" />
     <xacro:property name="lidarRadius"    value="0.065" />
     <xacro:property name="lidarOriginX"   value="0.0" />
-    <xacro:property name="lidarOriginY"   value="0.0" />
-    <xacro:property name="lidarOriginZ"   value="0.333" />
+    <xacro:property name="lidarOriginY"   value="0.30" />
+    <xacro:property name="lidarOriginZ"   value="0.30" />
 
     <!--
 	 The definitions for the ultrasonic rangefinders.
