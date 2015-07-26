@@ -6,8 +6,8 @@
         respawn="true"
         >
 
-        <param name="imu_port"        value="/dev/ttyUSB0"/>
-        <param name="imu_baud_rate"   value="38400"/>
+        <param name="imu_port"        value="/dev/ttyUSB3"/>
+        <param name="imu_baud_rate"   value="115200"/>
         <param name="imuUpdateHz"     value="10.0"/>
     </node>
 

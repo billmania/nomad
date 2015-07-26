@@ -1,10 +1,12 @@
 <launch>
 
-    <node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node" respawn="true">
+    <node name="urg_node" pkg="urg_node" type="urg_node" respawn="true">
         <param name="frame_id" value="/laser"/>
+        <param name="serial_port" value="/dev/ttyACM1"/>
     </node> 
 
 
+<!--
   <group ns="camera">
     <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" />
 
@@ -21,6 +23,7 @@
           args="load image_proc/debayer camera_nodelet_manager">
     </node>
   </group>
+ -->
 
 </launch>
 

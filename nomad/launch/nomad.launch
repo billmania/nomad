@@ -1,14 +1,15 @@
 <launch>
 
-    <!-- Motor control -->
+    <!-- Motion control -->
     <include
-        file="$(find nomad)/config/diff_baseController.xml"
+        file="$(find nomad)/config/ackermann.xml"
         />
 
-    <!-- Pose calculation -->
+    <!-- Pose calculation
     <include
         file="$(find nomad)/config/poseCalculator.xml"
         />
+    -->
 
     <!-- Transformations -->
     <include 
@@ -37,6 +38,6 @@
 	type="image_subscriber_node"
 	respawn="true"
 	/>   
--->
+    -->
 
 </launch>
