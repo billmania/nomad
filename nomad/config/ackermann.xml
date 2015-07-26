@@ -1,0 +1,32 @@
+<launch>
+
+	<rosparam param="ticks_per_rev">800</rosparam>
+	<rosparam param="ticks_meter">1743</rosparam>
+	<rosparam param="maxMetersPerSecond">0.603</rosparam>
+	<rosparam param="minMetersPerSecond">0.100</rosparam>
+	<rosparam param="motorUpdateHz">20.0</rosparam>
+	<rosparam param="rightMotorDirectionSign">-1</rosparam>
+	<rosparam param="leftMotorDirectionSign">1</rosparam>
+
+	<rosparam param="encoder_min">0</rosparam>
+	<rosparam param="encoder_max">65000</rosparam>
+	<rosparam param="encoderUpdateHz">5.0</rosparam>
+	<rosparam param="wheel_low_wrap">19500</rosparam>
+	<rosparam param="wheel_high_wrap">45500</rosparam>
+	<rosparam param="base_width">0.31</rosparam>
+
+    <node
+        pkg="nomad"
+        type="ackermann_controller.py"
+        name="ackermann_controller"
+        respawn="true"
+        />
+    
+    <node
+        pkg="nomad"
+        type="diff_wheelEncoders.py"
+        name="diff_wheelEncoders"
+        respawn="true"
+        /> 
+
+</launch>

@@ -1,14 +1,14 @@
-Nomad
+Mower
 Bill Mania <bill@manialabs.us>
 
-The nomad project consists of a mobile, autonomous rover which
-can explore an indoor space.
+The mower project consists of a mobile, autonomous rover which
+can navigate an orchard
 
 parts contains the files which describe the mechanical parts,
 usually in either OpenSCAD or FreeCAD format.
 
-ros contains the source files for the ROS implementation of
+nomad contains the source files for the ROS implementation of
 all of the software logic.
 
-sketches contains the Arduino sketches for the projectg.
+sketches contains the Arduino sketches for the project.
 
