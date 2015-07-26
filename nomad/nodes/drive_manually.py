@@ -4,55 +4,51 @@
 
 drive_manually
 
-reads one character manual drive commands from stdin, creates
-an appropriate Twist message and publishes it to the /cmd_vel
-topic. this program is intended to be used to manually drive
-the rover.
+reads one character manual drive commands from stdin, creates an appropriate
+AckermannDriveStamped message and publishes it to the /ackermann_cmd topic.
+this program is intended to be used to manually drive the mower.
 
 listens to:
 
 publishes to:
- /cmd_vel
+ /ackermann_cmd
 """
 
 import roslib; roslib.load_manifest('nomad')
 import rospy
 
-import time
+from math import pi
 
-from geometry_msgs.msg import Twist
+from ackermann_msgs.msg import AckermannDriveStamped
 
 import os
 import sys
 import termios
 import fcntl
 
-translateRate = 0.6  # meters per second
-rotateRate = 2.0 # radians per second
+speedIncrement = 0.05
+steerIncrement = pi / 32.0
 adjuster = 0.9
+FULL_STOP = ' '
 keyToRate = {
-    '7' : (translateRate, 0.0, 'AHEAD FULL'),
-    'u' : (translateRate / 2, 0.0, 'AHEAD HALF'),
-    ' ' : (0.0, 0.0, 'FULL STOP'),
-    'j' : (-translateRate / 2, 0.0, 'REVERSE HALF'),
-    'm' : (-translateRate, 0.0, 'REVERSE FULL'),
-    'y' : (translateRate / 2, rotateRate, 'AHEAD LEFT'),
-    'i' : (translateRate / 2, -rotateRate, 'AHEAD RIGHT'),
-    'h' : (-translateRate / 2, -rotateRate, 'REVERSE LEFT'),
-    'k' : (-translateRate / 2, rotateRate, 'REVERSE RIGHT'),
-    'o' : (0.0, rotateRate, 'ROTATE IN PLACE TO THE LEFT'),
-    'p' : (0.0, -rotateRate, 'ROTATE IN PLACE TO THE RIGHT')
+    '7' : (speedIncrement, 0.0, 'AHEAD FASTER'),
+    'u' : (-speedIncrement, 0.0, 'AHEAD SLOWER'),
+    FULL_STOP : (0.0, 0.0, 'FULL STOP'),
+    'j' : (speedIncrement, 0.0, 'REVERSE SLOWER'),
+    'm' : (-speedIncrement, 0.0, 'REVERSE FASTER'),
+    'y' : (0.0, steerIncrement, 'TURN LEFT'),
+    'i' : (0.0, -steerIncrement, 'TURN RIGHT'),
 }
 
 def driveLoop():
     """
     driveLoop() - a loop which reads from stdin and publishes a
-        Twist message, ad infinitum
+        AckermannDriveStamped message, ad infinitum
     """
 
-    drivePublisher = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
+    drivePublisher = rospy.Publisher('ackermann_cmd', AckermannDriveStamped, queue_size = 1)
 
-    twistMessage = Twist()
+    ackermannMessage = AckermannDriveStamped()
 
     fd = sys.stdin.fileno()
     oldterm = termios.tcgetattr(fd)
@@ -62,7 +58,7 @@ def driveLoop():
     oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
     fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
 
-    rate = rospy.Rate(50.0)
+    rate = rospy.Rate(5.0)
     while not rospy.is_shutdown():
 
         # read one character
@@ -73,17 +69,21 @@ def driveLoop():
 
             except IOError:
                 # in simulation, we need to publish every loop
-                drivePublisher.publish(twistMessage)
+                drivePublisher.publish(ackermannMessage)
                 rate.sleep()
 
         try:
-            # build the Twist message
-            twistMessage.linear.x = keyToRate[c][0] * adjuster
-            twistMessage.angular.z = keyToRate[c][1] * adjuster
+            # build the AckermannDriveStamped message
+            if c == FULL_STOP:
+                ackermannMessage.drive.speed = 0.0
+                ackermannMessage.drive.steering_angle = 0.0
+            else:
+                ackermannMessage.drive.speed += keyToRate[c][0] * adjuster
+                ackermannMessage.drive.steering_angle += keyToRate[c][1] * adjuster
             print keyToRate[c][2]
 
-            # publish the Twist message
-            drivePublisher.publish(twistMessage)
+            # publish the AckermannDriveStamped message
+            drivePublisher.publish(ackermannMessage)
 
         except:
             if c == 'q':
