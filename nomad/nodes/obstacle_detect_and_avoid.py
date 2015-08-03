@@ -10,26 +10,24 @@ obstacle detector and collision avoider
 
 """
 
-import random
+import random, math
 import roslib; roslib.load_manifest('nomad')
 import rospy
 
 from sensor_msgs.msg import LaserScan
-
-from geometry_msgs.msg import Twist
-
+from ackermann_msgs.msg import AckermannDriveStamped
 
 class CollisionDetector():
 
     def __init__(self):
-        self.twistMessage =  Twist()
-        self.avoidTwistMessage = Twist()
+        self.ackermannMessage =  AckermannDriveStamped()
+        self.avoidAckermannMessage = AckermannDriveStamped()
 
-        self.avoidTwistMessage.linear.x = 0.0
-        self.avoidTwistMessage.angular.z = 0.0
-        self.minimum_range_to_obstacle = 0.7 # meters
+        self.avoidAckermannMessage.drive.speed = 0.0
+        self.avoidAckermannMessage.drive.steering_angle = 0.0
+        self.minimum_range_to_obstacle = 1.0 # meters
         self.backup_speed = 0.3 # meters per second
-        self.turn_speed = 0.7 # radians per second
+        self.turn_angle = 0.7 # radians
         self.already_turning = False
         self.turn_direction = random.choice([-1, 1])
         #
@@ -39,14 +37,14 @@ class CollisionDetector():
         self.range_to_examine = 2
         rospy.loginfo("Initializing collision_detector node with obstacle distance threshold %0.1f" % (self.minimum_range_to_obstacle))
 
-        self.filtered_cmd_vel1 = rospy.Publisher('filtered_cmd_vel',Twist, queue_size = 10)
-        self.filtered_cmd_vel1.publish(self.twistMessage)
+        self.filtered_ackermann = rospy.Publisher('filtered_ackermann_cmd', AckermannDriveStamped, queue_size = 10)
+        self.filtered_ackermann.publish(self.ackermannMessage)
 
-        # get most recent twist on cmd_vel
-        self.cmd_vel1 = rospy.Subscriber('cmd_vel', Twist, self.handleTwistMessage)
-
-        # callback on laser
-        self.callback = rospy.Subscriber('scan', LaserScan, self.laser_callback)
+        #
+        # subscribe to the ackermann commands and the scan data
+        #
+        self.ackermannSubscriber = rospy.Subscriber('ackermann_cmd', AckermannDriveStamped, self.handleAckermannMessage)
+        self.scanSubscriber = rospy.Subscriber('scan', LaserScan, self.scanCallback)
 
     def turnDirection(self):
         """turnDirection() - determine which way to turn
@@ -62,90 +60,97 @@ class CollisionDetector():
 
         return self.turn_direction
 
-    def handleTwistMessage(self,twistMessage):
-        """handleTwistMessage() - Just save the most recent Twist message
+    def handleAckermannMessage(self, ackermannMessage):
+        """handleAckermannMessage() - Just save the most recent Ackermann message
 
         """
 
-        rospy.logdebug("translationX: %f, rotationZ: %f" % (
-            twistMessage.linear.x,
-            twistMessage.angular.z
+        rospy.logdebug("speed: %f, turn: %f" % (
+            ackermannMessage.drive.speed,
+            ackermannMessage.drive.steering_angle
             ))
 
-        self.twistMessage = twistMessage
+        self.ackermannMessage = ackermannMessage
 
         return
 
-    def laser_callback(self, msg):
+    def scanCallback(self, msg):
 
-        if self.twistMessage.linear.x == 0 and self.twistMessage.angular.y == 0:
-            self.filtered_cmd_vel1.publish(self.twistMessage)
+        if self.ackermannMessage.drive.speed == 0 and self.ackermannMessage.drive.steering_angle == 0:
+            self.filtered_ackermann.publish(self.ackermannMessage)
             return
 
         #
-        # Divide the scan data into three sections: the left quarter, the middle half
-        # and the right quarter. This logic assumes the LiDAR has a Field of View of
-        # 180 degrees. From the front section, extract the small section which is
-        # most directly in front of the rover.
+        # Find the laser scan ranges between -pi/4 and pi/4.
         #
         number_of_ranges = len(msg.ranges)
-        end_of_left_side = number_of_ranges / 4
-        begin_of_right_side = 3 * number_of_ranges / 4
+        min_angle = msg.angle_min
+        max_angle = msg.angle_max
+        range_min = msg.range_min
+        angle_increment = msg.angle_increment
+        rospy.logdebug('ranges: %d, minAngle: %f, maxAngle: %f, increment: %f, range_min: %f' % (
+            number_of_ranges,
+            min_angle,
+            max_angle,
+            angle_increment,
+            range_min))
+        calculated_ranges = (abs(min_angle) + max_angle) / angle_increment + 1
+        xRay = int(abs(min_angle) / angle_increment)
+        oneEighth = int(math.pi / 4 / angle_increment)
+        leftQuarter = xRay - oneEighth
+        rightQuarter = xRay + oneEighth
+        rospy.logdebug('calculated ranges: %d, left: %d, right: %d' % (
+            calculated_ranges,
+            leftQuarter,
+            rightQuarter))
 
-        left_side = sorted(msg.ranges[0:end_of_left_side])
-        right_side = sorted(msg.ranges[begin_of_right_side:])
-        front = sorted(msg.ranges[end_of_left_side:begin_of_right_side])
-        far_front = sorted(msg.ranges[7 * number_of_ranges / 16:9 * number_of_ranges / 16])
+        left_side = sorted(msg.ranges[0:leftQuarter])
+        right_side = sorted(msg.ranges[rightQuarter:])
+        front = sorted(msg.ranges[leftQuarter:rightQuarter])
 
-        something_on_the_left = left_side[self.range_to_examine] < self.minimum_range_to_obstacle
-        something_on_the_right = right_side[self.range_to_examine] < self.minimum_range_to_obstacle
+        something_on_the_left = range_min < left_side[self.range_to_examine] <= self.minimum_range_to_obstacle
+        something_on_the_right = range_min < right_side[self.range_to_examine] <= self.minimum_range_to_obstacle
 
-        if front[self.range_to_examine] < self.minimum_range_to_obstacle:
+        if range_min < front[self.range_to_examine] <= self.minimum_range_to_obstacle:
             # something is directly in front of the rover
-            rospy.logdebug('Something in front')
-            self.avoidTwistMessage.linear.x = 0.0
+            rospy.logdebug('Something %f meters in front' % front[self.range_to_examine])
+            self.avoidAckermannMessage.drive.speed = 0.0
 
             if something_on_the_left and something_on_the_right:
                 rospy.logdebug(' and on both sides')
-                self.avoidTwistMessage.linear.x = -1 * self.backup_speed
-                self.avoidTwistMessage.angular.z = self.turn_speed * self.turnDirection()
-                self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
+                self.avoidAckermannMessage.drive.speed = -1 * self.backup_speed
+                self.avoidAckermannMessage.drive.steering_angle = self.turn_angle * self.turnDirection()
+                self.filtered_ackermann.publish(self.avoidAckermannMessage)
 
             elif something_on_the_left and not something_on_the_right:
                 rospy.logdebug(' and on the left')
-                self.avoidTwistMessage.angular.z = self.turn_speed
-                self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
+                self.avoidAckermannMessage.drive.steering_angle = self.turn_angle
+                self.filtered_ackermann.publish(self.avoidAckermannMessage)
 
             elif not something_on_the_left and something_on_the_right:
                 rospy.logdebug(' and on the right')
-                self.avoidTwistMessage.angular.z = -(self.turn_speed)
-                self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
+                self.avoidAckermannMessage.drive.steering_angle = -(self.turn_angle)
+                self.filtered_ackermann.publish(self.avoidAckermannMessage)
 
             else:
-                self.avoidTwistMessage.angular.z = self.turn_speed * self.turnDirection()
-                self.filtered_cmd_vel1.publish(self.avoidTwistMessage)
+                self.avoidAckermannMessage.drive.steering_angle = self.turn_angle * self.turnDirection()
+                self.filtered_ackermann.publish(self.avoidAckermannMessage)
 
         else:
-            if far_front[self.range_to_examine] < (self.minimum_range_to_obstacle * 1.5):
-                # the rover is approaching something in the distance
-                rospy.logdebug('Something approaching')
-                self.twistMessage.linear.x = self.twistMessage.linear.x / 2.0
-                self.filtered_cmd_vel1.publish(self.twistMessage)
-
             if something_on_the_left and not something_on_the_right:
                 rospy.logdebug(' Something on the left')
-                self.twistMessage.angular.z = self.twistMessage.angular.z + (self.turn_speed / 4)
-                self.filtered_cmd_vel1.publish(self.twistMessage)
+                self.ackermannMessage.drive.steering_angle = self.ackermannMessage.drive.steering_angle + (self.turn_angle / 4)
+                self.filtered_ackermann.publish(self.ackermannMessage)
 
             elif not something_on_the_left and something_on_the_right:
                 rospy.logdebug(' Something on the right')
-                self.twistMessage.angular.z = self.twistMessage.angular.z - (self.turn_speed / 4)
-                self.filtered_cmd_vel1.publish(self.twistMessage)
+                self.ackermannMessage.drive.steering_angle = self.ackermannMessage.drive.steering_angle - (self.turn_angle / 4)
+                self.filtered_ackermann.publish(self.ackermannMessage)
 
             else:
                 rospy.logdebug('Clear sailing!')
                 self.already_turning = False
-                self.filtered_cmd_vel1.publish(self.twistMessage)
+                self.filtered_ackermann.publish(self.ackermannMessage)
 
         return
 
