@@ -60,10 +60,11 @@ loop() {
     directionVoltage = analogRead(directionPin);
     windSource = int(0.351745 * directionVoltage - 0.054602);
 
-    Serial.print("Source ");
+    Serial.print("$WIMWV,");
     Serial.print(windSource);
-    Serial.print(" Knots ");
-    Serial.println(windSpeedKnots);
+    Serial.print(",R,");
+    Serial.print(windSpeedKnots);
+    Serial.println(",K,AX");
 
     delay(1000);
 }
