@@ -1,2 +1,5 @@
 *.hex
 *.o
+.dep/*
+.lib/*
+builddir/*
