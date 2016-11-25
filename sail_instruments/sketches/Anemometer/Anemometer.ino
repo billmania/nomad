@@ -2,37 +2,69 @@
  * Anemometer
  *
  * Read the wind speed and direction from a Davis
- * anemometer.
+ * anemometer. Write a WIMWV NMEA sentence to the
+ * console and to the CAN bus.
+ *
  * http://www.davisnet.com/product_documents/weather/spec_sheets/6410_SS.pdf
  *
  * Bill Mania <bill@manialabs.us>
+ *
+ * Yellow - 5V
+ * Red    - Gnd
+ * Green  - Direction (pin A0)
+ * Black  - Speed (pin 2)
  */
 
-#define MICROS_PER_MINUTE 60000000UL
+#include <stdio.h>
+/*
+#include <mcp2515.h>
+ */
+
 #define MICROS_PER_SECOND 1000000UL
-#define MAXIMUM_UPDATE_PERIOD 1000000UL
+#define MAX_NMEA_LENGTH 100
 
 int anemometerInterrupt = 0;
 int directionPin = 0;
-int position = 0;
 int directionVoltage, windSource, windSpeedKnots;
 volatile unsigned long currentTime, previousTime;
 volatile double elapsedTime;
 volatile unsigned long pulses, latestPulses;
-int rpm, rpmArray[] = {0, 0, 0, 0, 0};
+int sentenceLength;
+char buffer[MAX_NMEA_LENGTH], checksum;
+/*
+tCAN messageOut, messageIn;
+ */
 
-void
-irInterrupt(void) {
+void irInterrupt(void) {
     pulses++;
 };
+
+char calcChecksum(char *sentence) {
+    byte checksum = 0;
+
+    while (*sentence) {
+        checksum ^= *sentence++;
+    }
+
+    return char(checksum);
+}
 
 void
 setup()
 {
   //Setup usb serial connection to computer
   Serial.begin(9600);
-  Serial.println("Anemometer");
-  Serial.println("Version 5");
+  Serial.println(F("Anemometer"));
+  Serial.println(F("Version 10"));
+
+  /*
+   * Initialize the bus at 500 Kbps
+  if (mcp2515_init(1)) {
+    Serial.println(F("CAN bus init OK"));
+  } else {
+    Serial.println(F("mcp2515_init() failed"));
+  }
+   */
 
   previousTime = micros();
   pulses = 0UL;
@@ -47,10 +79,7 @@ setup()
 
 void
 loop() {
-    /*
-     * This loop requires about 500 micros. Reading the clock
-     * requires about 4 micros.
-     */
+
     latestPulses = pulses; pulses = 0UL;
     currentTime = micros();
     elapsedTime = currentTime - previousTime;
@@ -60,11 +89,40 @@ loop() {
     directionVoltage = analogRead(directionPin);
     windSource = int(0.351745 * directionVoltage - 0.054602);
 
-    Serial.print("$WIMWV,");
-    Serial.print(windSource);
-    Serial.print(",R,");
-    Serial.print(windSpeedKnots);
-    Serial.println(",K,AX");
+    sentenceLength = sprintf(
+        buffer,
+        "WIMWV,%d,R,%d,K,A",
+        windSource,
+        windSpeedKnots
+        );
+
+    if (sentenceLength < MAX_NMEA_LENGTH) {
+        Serial.print("$");
+        Serial.print(buffer);
+        Serial.println(calcChecksum(buffer));
+    };
+
+    /*
+     * Write data to CAN bus
+    if (mcp2515_check_free_buffer()) {
+        messageOut.id = 0x1;
+        messageOut.header.rtr = (int8_t) 0;
+        messageOut.header.length = (uint8_t) 1;
+        messageOut.data[0] = (uint8_t) 0;
+
+        if (! mcp2515_send_message(&messageOut)) {
+            Serial.println(F("Failed to send CAN message"));
+        }
+    } else {
+        Serial.println(F("No space for outbound message"));
+    }
+
+    if (mcp2515_check_message()) {
+        Serial.println(F("CAN message ready"));
+        mcp2515_get_message(&messageIn);
+        Serial.println(messageIn.id);
+    }
+     */
 
     delay(1000);
 }
