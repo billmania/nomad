@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-ARDUINO_DIR="/usr/local/arduino-1.6.9"
-PROJECTS_DIR="/home/bill/projects"
-PROJECT="nomad/sail_instruments/sketches/Anemometer"
+ARDUINO_DIR="/usr/local/arduino-1.6.13"
+PROJECTS_DIR="/home/bill/projects/nomad/sail_instruments/sketches"
+PROJECT="Anemometer"
 
 cd ${PROJECTS_DIR}/${PROJECT}
 
@@ -19,6 +19,6 @@ ${ARDUINO_DIR}/arduino \
  --port /dev/ttyACM0 \
  --board arduino:avr:mega:cpu=atmega2560 \
  --pref build.path=builddir \
- ${PROJECTS_DIR}/${PROJECT}/Anemometer.ino
+ ${PROJECTS_DIR}/${PROJECT}/${PROJECT}.ino
 
 exit $?
