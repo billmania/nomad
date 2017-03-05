@@ -5,7 +5,13 @@
  * anemometer. Write a WIMWV NMEA sentence to the
  * console and to the CAN bus.
  *
+ * https://bitbucket.org/fmalpartida/new-liquidcrystal
+ *
  * http://www.davisnet.com/product_documents/weather/spec_sheets/6410_SS.pdf
+ *
+ * https://www.sainsmart.com/arduino/arduino-shields/lcd-shields/sainsmart-iic-i2c-twi-serial-2004-20x4-lcd-module-shield-for-arduino-uno-mega-r3.html
+ *
+ * http://www.gammon.com.au/interrupts
  *
  * Bill Mania <bill@manialabs.us>
  *
@@ -15,25 +21,42 @@
  * Black  - Speed (pin 2)
  */
 
-#include <stdio.h>
-/*
-#include <mcp2515.h>
- */
+#define DISPLAY
+#define VERSION F("Anemometer v1.7")
 
+#include <stdio.h>
+
+#ifdef DISPLAY
+#include <LCD.h>
+#include <LiquidCrystal_I2C.h>
+
+#define I2C_ADDR      0x27 // I2C address of PCF8574A
+#define BACKLIGHT_PIN 3
+#define En_pin        2
+#define Rw_pin        1
+#define Rs_pin        0
+#define D4_pin        4
+#define D5_pin        5
+#define D6_pin        6
+#define D7_pin        7
+
+LiquidCrystal_I2C twilcd(I2C_ADDR,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin, BACKLIGHT_PIN, POSITIVE);
+
+#endif
+
+long currentMillis, previousMillis;
 #define MICROS_PER_SECOND 1000000UL
 #define MAX_NMEA_LENGTH 100
 
-int anemometerInterrupt = 0;
-int directionPin = 0;
+int anemometerPin = 2; // digital
+int directionPin = 0;  // analog
 int directionVoltage, windSource, windSpeedKnots;
 volatile unsigned long currentTime, previousTime;
 volatile double elapsedTime;
-volatile unsigned long pulses, latestPulses;
+volatile unsigned long pulses;
+unsigned long latestPulses;
 int sentenceLength;
 char buffer[MAX_NMEA_LENGTH], checksum;
-/*
-tCAN messageOut, messageIn;
- */
 
 void irInterrupt(void) {
     pulses++;
@@ -54,23 +77,25 @@ setup()
 {
   //Setup usb serial connection to computer
   Serial.begin(9600);
-  Serial.println(F("Anemometer"));
-  Serial.println(F("Version 10"));
+  Serial.println(VERSION);
 
-  /*
-   * Initialize the bus at 500 Kbps
-  if (mcp2515_init(1)) {
-    Serial.println(F("CAN bus init OK"));
-  } else {
-    Serial.println(F("mcp2515_init() failed"));
-  }
-   */
+#ifdef DISPLAY
+  twilcd.begin(20, 4);
+  twilcd.clear();
+  twilcd.print(VERSION);
+  delay(1000);
+  twilcd.clear();
+  twilcd.setCursor(0, 0);
+  twilcd.print("Speed ");
+  twilcd.setCursor(0, 1);
+  twilcd.print("Direction ");
+#endif
 
   previousTime = micros();
   pulses = 0UL;
   pinMode(2, INPUT_PULLUP);
   attachInterrupt(
-    anemometerInterrupt,
+    digitalPinToInterrupt(anemometerPin),
     irInterrupt,
     FALLING
     );
@@ -102,27 +127,15 @@ loop() {
         Serial.println(calcChecksum(buffer));
     };
 
-    /*
-     * Write data to CAN bus
-    if (mcp2515_check_free_buffer()) {
-        messageOut.id = 0x1;
-        messageOut.header.rtr = (int8_t) 0;
-        messageOut.header.length = (uint8_t) 1;
-        messageOut.data[0] = (uint8_t) 0;
 
-        if (! mcp2515_send_message(&messageOut)) {
-            Serial.println(F("Failed to send CAN message"));
-        }
-    } else {
-        Serial.println(F("No space for outbound message"));
-    }
-
-    if (mcp2515_check_message()) {
-        Serial.println(F("CAN message ready"));
-        mcp2515_get_message(&messageIn);
-        Serial.println(messageIn.id);
-    }
-     */
+#ifdef DISPLAY
+    twilcd.setCursor(6, 0);
+    twilcd.print(windSpeedKnots);
+    twilcd.print("      ");
+    twilcd.setCursor(10, 1);
+    twilcd.print(windSource);
+    twilcd.print("      ");
+#endif
 
     delay(1000);
 }
