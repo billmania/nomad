@@ -1,6 +1,6 @@
 <launch>
 
-    <node name="hokuyo_node" pkg="hokuyo_node" type="hokuyo_node" respawn="true">
+    <node name="urg_node" pkg="urg_node" type="urg_node" respawn="true">
         <param name="frame_id" value="/laser"/>
     </node> 
 
