@@ -61,11 +61,8 @@ class MoveBaseSquare():
         
         # Append each of the four waypoints to the list.  Each waypoint
         # is a pose consisting of a position and orientation in the map frame.
-        waypoints.append(Pose(Point(5.0, 0.0, 0.0), quaternions[0]))
-        waypoints.append(Pose(Point(5.0, -2.0, 0.0), quaternions[0]))
-        waypoints.append(Pose(Point(14.5, -2.0, 0.0), quaternions[0]))
-        waypoints.append(Pose(Point(14.5, 7.25, 0.0), quaternions[0]))
-        waypoints.append(Pose(Point(5.0, 7.25, 0.0), quaternions[0]))
+        waypoints.append(Pose(Point(10.0, 0.0, 0.0), quaternions[0]))
+        waypoints.append(Pose(Point(10.0, 2.0, 0.0), quaternions[0]))
         waypoints.append(Pose(Point(0.0, 0.0, 0.0), quaternions[0]))
         
         # Initialize the visualization markers for RViz
@@ -78,7 +75,7 @@ class MoveBaseSquare():
             self.markers.points.append(p)
             
         # Publisher to manually control the robot (e.g. to stop it)
-        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist)
+        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size =1)
         
         # Subscribe to the move_base action server
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
@@ -97,6 +94,7 @@ class MoveBaseSquare():
         # Cycle through the four waypoints
         while i < len(waypoints) and not rospy.is_shutdown():
             # Update the marker display
+            print "Waypoint started"
             self.marker_pub.publish(self.markers)
             
             # Intialize the waypoint goal
@@ -111,6 +109,7 @@ class MoveBaseSquare():
             # Set the goal pose to the i-th waypoint
             goal.target_pose.pose = waypoints[i]
             
+            print goal
             # Start the robot moving toward the goal
             self.move(goal)
             
@@ -142,7 +141,7 @@ class MoveBaseSquare():
         marker_color = {'r': 1.0, 'g': 0.7, 'b': 1.0, 'a': 1.0}
         
         # Define a marker publisher.
-        self.marker_pub = rospy.Publisher('waypoint_markers', Marker)
+        self.marker_pub = rospy.Publisher('waypoint_markers', Marker, queue_size =1)
         
         # Initialize the marker points list.
         self.markers = Marker()
